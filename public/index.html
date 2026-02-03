@@ -3,63 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IIoT Hybrid Dashboard</title>
+    <title>Dashboard</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    
+
     <style>
-        /* --- AAPKA ORIGINAL CSS --- */
+        /* --- 100% ORIGINAL CSS --- */
         :root {
-            --bg-dark-primary: #12151c; --bg-dark-secondary: #1c202a; --text-primary: #e6e6e6;
-            --text-secondary: #a0a0a0; --accent-blue: #00a8ff; --accent-green: #2ecc71;
-            --accent-red: #e74c3c; --border-color: #343a46;
+            --bg-dark-primary: #12151c;
+            --bg-dark-secondary: #1c202a;
+            --text-primary: #e6e6e6;
+            --text-secondary: #a0a0a0;
+            --accent-blue: #00a8ff;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --border-color: #343a46;
         }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark-primary); color: var(--text-primary); margin: 0; padding: 24px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 24px;
+        }
         .dashboard { display: flex; flex-direction: column; gap: 24px; }
         .header { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .title-container { flex-grow: 1; text-align: center; }
-        .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
         .header-controls { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
         .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--accent-red); }
         .status-dot.connected { background-color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+        
         .widget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
         .card { background-color: var(--bg-dark-secondary); border-radius: 16px; padding: 24px; border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .card-title { font-size: 18px; font-weight: 600; }
         .sensor-value { font-size: 48px; font-weight: 700; text-align: center; margin: auto 0; }
         .sensor-value .unit { font-size: 24px; color: var(--text-secondary); margin-left: 8px; }
         .sensor-status { font-size: 28px; font-weight: 600; text-align: center; margin: auto 0; color: var(--accent-green); }
-        .sensor-status.alert { color: var(--accent-red); animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        .sensor-status.alert { color: var(--accent-red); }
+        
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked+.slider { background-color: var(--accent-green); }
         input:checked+.slider:before { transform: translateX(26px); }
-        .toggle-switch-container { display: flex; justify-content: space-between; align-items: center; }
-        /* Modal */
+
+        #details-btn { background-color: var(--border-color); color: var(--text-secondary); border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); align-items: center; justify-content: center; }
-        .modal-content { background-color: var(--bg-dark-secondary); padding: 24px; border-radius: 16px; width: 90%; max-width: 600px; text-align: center; border: 1px solid var(--border-color); }
+        .modal-content { background-color: var(--bg-dark-secondary); padding: 24px; border: 1px solid var(--border-color); border-radius: 16px; width: 90%; max-width: 700px; position: relative; text-align: left; }
+        .close-btn { color: var(--text-secondary); position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="dashboard">
         <header class="header">
             <div class="title-container">
-                <h1>Wireless Monitoring, Automation & Fault Detection System</h1>
+                <h1>Reliable Real Time Wireless Monitoring, Automation & Fault Detection System Using Arduino And Wi-Fi Module</h1>
             </div>
             <div class="header-controls">
                 <div class="status-indicator">
                     <div id="status-dot" class="status-dot"></div>
                     <span id="status-text">Disconnected</span>
                 </div>
+                <button id="details-btn" title="Project Details">i</button>
             </div>
         </header>
 
@@ -68,76 +83,96 @@
             <div class="card"><div class="card-header"><span class="card-title">Humidity</span></div><div class="sensor-value"><span id="humidity-value">--</span><span class="unit">%</span></div></div>
             <div class="card"><div class="card-header"><span class="card-title">Smoke Detection</span></div><div class="sensor-value"><span id="smoke-value">--</span><span class="unit">ppm</span></div></div>
             <div class="card"><div class="card-header"><span class="card-title">Fire Sensor</span></div><div class="sensor-status" id="fire-status">Clear</div></div>
-            <div class="card"><div class="card-header"><span class="card-title">PIR Motion</span></div><div class="sensor-status" id="pir-status">No Motion</div></div>
-            <div class="card"><div class="card-header"><span class="card-title">Safety Switch</span></div><div class="sensor-status" id="safety-status">INACTIVE</div></div>
+            <div class="card"><div class="card-header"><span class="card-title">PIR Motion Sensor</span></div><div class="sensor-status" id="pir-status">No Motion</div></div>
+            <div class="card"><div class="card-header"><span class="card-title">Safety Switch</span></div><div class="sensor-status alert" id="safety-status" style="font-size: 24px;">INACTIVE</div></div>
+            <div class="card"><div class="card-header"><span class="card-title">3-Phase Motor</span></div><div class="toggle-switch-container" style="padding: 20px 0;"><span class="toggle-label" style="font-size: 20px; font-weight: 600;">Motor Status</span><label class="switch"><input type="checkbox" id="motor-toggle" onchange="sendCmd('motor', this.checked)"><span class="slider"></span></label></div></div>
             
-            <div class="card"><div class="card-header"><span class="card-title">3-Phase Motor</span></div><div class="toggle-switch-container"><span class="toggle-label">Motor</span><label class="switch"><input type="checkbox" id="motor-toggle" onchange="sendCmd('motor', this.checked)"><span class="slider"></span></label></div></div>
-            <div class="card"><div class="card-header"><span class="card-title">Load Control</span></div><div class="toggle-switch-container" style="margin-bottom:10px"><span>L1</span><label class="switch"><input type="checkbox" id="load1-toggle" onchange="sendCmd('load1', this.checked)"><span class="slider"></span></label></div><div class="toggle-switch-container"><span>L2</span><label class="switch"><input type="checkbox" id="load2-toggle" onchange="sendCmd('load2', this.checked)"><span class="slider"></span></label></div></div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Load Control</span></div>
+                <div style="display: flex; flex-direction: column; gap: 16px; margin-top: auto;">
+                    <div class="toggle-switch-container"><span class="toggle-label">Load 1</span><label class="switch"><input type="checkbox" id="load1-toggle" onchange="sendCmd('load1', this.checked)"><span class="slider"></span></label></div>
+                    <div class="toggle-switch-container"><span class="toggle-label">Load 2</span><label class="switch"><input type="checkbox" id="load2-toggle" onchange="sendCmd('load2', this.checked)"><span class="slider"></span></label></div>
+                    <div class="toggle-switch-container"><span class="toggle-label">Load 3</span><label class="switch"><input type="checkbox" id="load3-toggle" onchange="sendCmd('load3', this.checked)"><span class="slider"></span></label></div>
+                </div>
+            </div>
         </div>
-
-        <div class="card" style="grid-column: 1 / -1; height: 350px;">
-            <div class="card-header"><span class="card-title">Real-Time History</span></div>
+        
+        <div class="card" style="grid-column: 1 / -1; height: 320px;">
+            <div class="card-header"><span class="card-title">Sensor History</span></div>
             <canvas id="sensorChart"></canvas>
         </div>
     </div>
 
-    <div id="emergency-alert-modal" class="modal">
-        <div class="modal-content" style="border: 2px solid var(--accent-red);">
-            <h1 style="font-size: 50px;">🚨</h1>
-            <h2 id="emergency-title" style="color: var(--accent-red);">ALERT</h2>
-            <p id="emergency-message">Emergency detected!</p>
-            <button onclick="closeAlert()" style="padding: 12px 24px; background: var(--accent-red); color: white; border: none; border-radius: 8px; cursor: pointer;">STOP BUZZER</button>
+    <div id="details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Project Details</h2>
+            <div style="margin-top: 15px;">
+                <h3 style="color: var(--accent-blue);">Summary</h3>
+                <p style="color: var(--text-secondary); line-height: 1.6;">This project is a comprehensive IoT-based monitoring and control system. The Arduino Uno serves as the main hardware controller interfacing with sensors and actuators.</p>
+                <h3 style="color: var(--accent-blue);">Guide</h3>
+                <p style="font-size: 1.2em; font-weight: 600;">PROF. S.A. KALE</p>
+                <h3 style="color: var(--accent-blue);">Group Members</h3>
+                <ul style="list-style: none; padding: 0; font-weight: 600;">
+                    <li>TARUN ZALIYA</li><li>ANIKET JADHAV</li><li>SAMIKSHA DHAMDAR</li><li>PRATYAKSH GANVIR</li><li>DIPAK KHANORKAR</li>
+                </ul>
+            </div>
         </div>
     </div>
 
     <script>
         const socket = io();
         let sensorChart;
-        const MAX_POINTS = 20;
 
-        // Initialize Chart
+        // Chart Initialization
         const ctx = document.getElementById('sensorChart').getContext('2d');
         sensorChart = new Chart(ctx, {
             type: 'line',
             data: { labels: [], datasets: [
-                { label: 'Temp', data: [], borderColor: '#e74c3c', tension: 0.4 },
-                { label: 'Humidity', data: [], borderColor: '#00a8ff', tension: 0.4 }
+                { label: 'Temp (°C)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.2)', yAxisID: 'y' },
+                { label: 'Humidity (%)', data: [], borderColor: '#00a8ff', backgroundColor: 'rgba(0, 168, 255, 0.2)', yAxisID: 'y1' }
             ]},
-            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' }}}}
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' }}, y: { position: 'left' }, y1: { position: 'right' } } }
         });
 
+        // FIXED: Modal Functionality
+        const modal = document.getElementById('details-modal');
+        const btn = document.getElementById('details-btn');
+        const span = document.getElementsByClassName('close-btn')[0];
+
+        btn.onclick = function() { modal.style.display = "flex"; }
+        span.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+
+        // --- CLOUD SYNC ---
         socket.on('connect', () => {
             document.getElementById('status-dot').classList.add('connected');
-            document.getElementById('status-text').textContent = 'Cloud Live';
+            document.getElementById('status-text').textContent = 'Connected (Cloud)';
         });
 
-        // --- REAL DATA UPDATE (No Simulation) ---
         socket.on('sensorUpdate', (data) => {
             document.getElementById('temp-value').textContent = data.temperature;
             document.getElementById('humidity-value').textContent = data.humidity;
             document.getElementById('smoke-value').textContent = data.smoke;
             
-            // Fire Alert
-            const fs = document.getElementById('fire-status');
-            if(data.fire) { fs.textContent = 'DETECTED!'; fs.classList.add('alert'); showAlert("FIRE ALERT", "Fire detected in system!"); }
-            else { fs.textContent = 'Clear'; fs.classList.remove('alert'); }
+            const fire = document.getElementById('fire-status');
+            if(data.fire) { fire.textContent = 'Detected!'; fire.classList.add('alert'); } else { fire.textContent = 'Clear'; fire.classList.remove('alert'); }
 
-            // PIR
-            document.getElementById('pir-status').textContent = data.pir ? 'Motion!' : 'No Motion';
-            
-            // Toggles Sync
+            const safety = document.getElementById('safety-status');
+            safety.textContent = data.safety ? 'ACTIVE' : 'INACTIVE';
+
+            // Sync Toggles
             document.getElementById('motor-toggle').checked = data.motorState;
             document.getElementById('load1-toggle').checked = data.load1State;
+            document.getElementById('load2-toggle').checked = data.load2State;
+            document.getElementById('load3-toggle').checked = data.load3State;
 
             // Update Chart
             const now = new Date();
             sensorChart.data.labels.push(now);
             sensorChart.data.datasets[0].data.push(data.temperature);
             sensorChart.data.datasets[1].data.push(data.humidity);
-            if(sensorChart.data.labels.length > MAX_POINTS) {
-                sensorChart.data.labels.shift();
-                sensorChart.data.datasets.forEach(d => d.data.shift());
-            }
+            if(sensorChart.data.labels.length > 20) { sensorChart.data.labels.shift(); sensorChart.data.datasets.forEach(d => d.data.shift()); }
             sensorChart.update('none');
         });
 
@@ -148,14 +183,6 @@
                 body: JSON.stringify({ device, state: state ? 'on' : 'off' })
             });
         }
-
-        function showAlert(title, msg) {
-            document.getElementById('emergency-alert-modal').style.display = 'flex';
-            document.getElementById('emergency-title').innerText = title;
-            document.getElementById('emergency-message').innerText = msg;
-        }
-
-        function closeAlert() { document.getElementById('emergency-alert-modal').style.display = 'none'; }
     </script>
 </body>
 </html>
