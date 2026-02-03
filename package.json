@@ -1,0 +1,16 @@
+{
+  "name": "iot-hybrid-dashboard",
+  "version": "1.0.0",
+  "description": "Online Dashboard for Group 1 Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "socket.io": "^4.6.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5"
+  }
+}
