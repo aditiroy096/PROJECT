@@ -11,10 +11,11 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        /* --- 100% ORIGINAL CSS --- */
         :root {
             --bg-dark-primary: #12151c;
             --bg-dark-secondary: #1c202a;
@@ -50,6 +51,8 @@
         .sensor-status { font-size: 28px; font-weight: 600; text-align: center; margin: auto 0; color: var(--accent-green); }
         .sensor-status.alert { color: var(--accent-red); }
         
+        /* Switch Design */
+        .toggle-switch-container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
@@ -85,14 +88,21 @@
             <div class="card"><div class="card-header"><span class="card-title">Fire Sensor</span></div><div class="sensor-status" id="fire-status">Clear</div></div>
             <div class="card"><div class="card-header"><span class="card-title">PIR Motion Sensor</span></div><div class="sensor-status" id="pir-status">No Motion</div></div>
             <div class="card"><div class="card-header"><span class="card-title">Safety Switch</span></div><div class="sensor-status alert" id="safety-status" style="font-size: 24px;">INACTIVE</div></div>
-            <div class="card"><div class="card-header"><span class="card-title">3-Phase Motor</span></div><div class="toggle-switch-container" style="padding: 20px 0;"><span class="toggle-label" style="font-size: 20px; font-weight: 600;">Motor Status</span><label class="switch"><input type="checkbox" id="motor-toggle" onchange="sendCmd('motor', this.checked)"><span class="slider"></span></label></div></div>
+            
+            <div class="card">
+                <div class="card-header"><span class="card-title">3-Phase Motor</span></div>
+                <div class="toggle-switch-container" style="padding: 20px 0;">
+                    <span class="toggle-label" style="font-size: 20px; font-weight: 600;">Motor Status</span>
+                    <label class="switch"><input type="checkbox" id="motor-toggle" onchange="sendCmd('motor', this.checked)"><span class="slider"></span></label>
+                </div>
+            </div>
             
             <div class="card">
                 <div class="card-header"><span class="card-title">Load Control</span></div>
                 <div style="display: flex; flex-direction: column; gap: 16px; margin-top: auto;">
-                    <div class="toggle-switch-container"><span class="toggle-label">Load 1</span><label class="switch"><input type="checkbox" id="load1-toggle" onchange="sendCmd('load1', this.checked)"><span class="slider"></span></label></div>
-                    <div class="toggle-switch-container"><span class="toggle-label">Load 2</span><label class="switch"><input type="checkbox" id="load2-toggle" onchange="sendCmd('load2', this.checked)"><span class="slider"></span></label></div>
-                    <div class="toggle-switch-container"><span class="toggle-label">Load 3</span><label class="switch"><input type="checkbox" id="load3-toggle" onchange="sendCmd('load3', this.checked)"><span class="slider"></span></label></div>
+                    <div class="toggle-switch-container"><span>Load 1</span><label class="switch"><input type="checkbox" id="load1-toggle" onchange="sendCmd('load1', this.checked)"><span class="slider"></span></label></div>
+                    <div class="toggle-switch-container"><span>Load 2</span><label class="switch"><input type="checkbox" id="load2-toggle" onchange="sendCmd('load2', this.checked)"><span class="slider"></span></label></div>
+                    <div class="toggle-switch-container"><span>Load 3</span><label class="switch"><input type="checkbox" id="load3-toggle" onchange="sendCmd('load3', this.checked)"><span class="slider"></span></label></div>
                 </div>
             </div>
         </div>
@@ -109,9 +119,7 @@
             <h2 style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Project Details</h2>
             <div style="margin-top: 15px;">
                 <h3 style="color: var(--accent-blue);">Summary</h3>
-                <p style="color: var(--text-secondary); line-height: 1.6;">This project is a comprehensive IoT-based monitoring and control system. The Arduino Uno serves as the main hardware controller interfacing with sensors and actuators.</p>
-                <h3 style="color: var(--accent-blue);">Guide</h3>
-                <p style="font-size: 1.2em; font-weight: 600;">PROF. S.A. KALE</p>
+                <p style="color: var(--text-secondary); line-height: 1.6;">IoT-based Monitoring & Control System.</p>
                 <h3 style="color: var(--accent-blue);">Group Members</h3>
                 <ul style="list-style: none; padding: 0; font-weight: 600;">
                     <li>TARUN ZALIYA</li><li>ANIKET JADHAV</li><li>SAMIKSHA DHAMDAR</li><li>PRATYAKSH GANVIR</li><li>DIPAK KHANORKAR</li>
@@ -121,12 +129,17 @@
     </div>
 
     <script>
-        const socket = io();
-        let sensorChart;
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "Coz3tXL5lfiaVYxXtmC0iXBs0VjbvJUoZ53pSbHr",
+            databaseURL: "https://esp8266-3ff91-default-rtdb.firebaseio.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        // Chart Initialization
+        // Chart Init
         const ctx = document.getElementById('sensorChart').getContext('2d');
-        sensorChart = new Chart(ctx, {
+        const sensorChart = new Chart(ctx, {
             type: 'line',
             data: { labels: [], datasets: [
                 { label: 'Temp (°C)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.2)', yAxisID: 'y' },
@@ -135,54 +148,44 @@
             options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' }}, y: { position: 'left' }, y1: { position: 'right' } } }
         });
 
-        // FIXED: Modal Functionality
-        const modal = document.getElementById('details-modal');
-        const btn = document.getElementById('details-btn');
-        const span = document.getElementsByClassName('close-btn')[0];
+        // Listen for Firebase Updates
+        db.ref("sensor").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if(!data) return;
 
-        btn.onclick = function() { modal.style.display = "flex"; }
-        span.onclick = function() { modal.style.display = "none"; }
-        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
-
-        // --- CLOUD SYNC ---
-        socket.on('connect', () => {
-            document.getElementById('status-dot').classList.add('connected');
-            document.getElementById('status-text').textContent = 'Connected (Cloud)';
-        });
-
-        socket.on('sensorUpdate', (data) => {
-            document.getElementById('temp-value').textContent = data.temperature;
-            document.getElementById('humidity-value').textContent = data.humidity;
-            document.getElementById('smoke-value').textContent = data.smoke;
+            document.getElementById('temp-value').textContent = data.temperature || "--";
+            document.getElementById('humidity-value').textContent = data.humidity || "--";
+            document.getElementById('smoke-value').textContent = data.smoke || "--";
+            document.getElementById('safety-status').textContent = data.safety ? 'ACTIVE' : 'INACTIVE';
             
             const fire = document.getElementById('fire-status');
             if(data.fire) { fire.textContent = 'Detected!'; fire.classList.add('alert'); } else { fire.textContent = 'Clear'; fire.classList.remove('alert'); }
 
-            const safety = document.getElementById('safety-status');
-            safety.textContent = data.safety ? 'ACTIVE' : 'INACTIVE';
+            const pir = document.getElementById('pir-status');
+            pir.textContent = data.pir ? 'Motion!' : 'No Motion';
 
-            // Sync Toggles
-            document.getElementById('motor-toggle').checked = data.motorState;
-            document.getElementById('load1-toggle').checked = data.load1State;
-            document.getElementById('load2-toggle').checked = data.load2State;
-            document.getElementById('load3-toggle').checked = data.load3State;
-
-            // Update Chart
+            // Chart Update
             const now = new Date();
             sensorChart.data.labels.push(now);
             sensorChart.data.datasets[0].data.push(data.temperature);
             sensorChart.data.datasets[1].data.push(data.humidity);
             if(sensorChart.data.labels.length > 20) { sensorChart.data.labels.shift(); sensorChart.data.datasets.forEach(d => d.data.shift()); }
             sensorChart.update('none');
+
+            document.getElementById('status-dot').classList.add('connected');
+            document.getElementById('status-text').textContent = 'Connected (Firebase)';
         });
 
+        // Command Function
         function sendCmd(device, state) {
-            fetch('/api/control', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ device, state: state ? 'on' : 'off' })
-            });
+            db.ref("control/" + device).set(state ? 1 : 0);
         }
+
+        // Modal Logic
+        const modal = document.getElementById('details-modal');
+        document.getElementById('details-btn').onclick = () => modal.style.display = "flex";
+        document.getElementsByClassName('close-btn')[0].onclick = () => modal.style.display = "none";
+        window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; }
     </script>
 </body>
 </html>
