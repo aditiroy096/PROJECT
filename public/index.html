@@ -3,81 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    
+    <title>GROUP 1 PROJECT</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
     <style>
         :root {
-            --bg-dark-primary: #12151c;
-            --bg-dark-secondary: #1c202a;
-            --text-primary: #e6e6e6;
-            --text-secondary: #a0a0a0;
-            --accent-blue: #00a8ff;
-            --accent-green: #2ecc71;
-            --accent-red: #e74c3c;
-            --border-color: #343a46;
+            --bg-dark-primary: #12151c; --bg-dark-secondary: #1c202a; --text-primary: #e6e6e6;
+            --text-secondary: #a0a0a0; --accent-blue: #00a8ff; --accent-green: #2ecc71;
+            --accent-red: #e74c3c; --border-color: #343a46; --sidebar-width: 280px;
         }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark-primary);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 24px;
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark-primary); color: var(--text-primary); margin: 0; padding: 24px; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0;
+            background-color: var(--bg-dark-secondary); overflow-x: hidden; transition: 0.4s;
+            padding-top: 60px; border-right: 1px solid var(--border-color); box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
         }
+        .sidebar a {
+            padding: 15px 25px; text-decoration: none; font-size: 18px; color: var(--text-secondary);
+            display: block; transition: 0.3s; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .sidebar a:hover { color: var(--accent-blue); background-color: rgba(255,255,255,0.05); padding-left: 35px; }
+        .sidebar .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; cursor: pointer; border-bottom: none !important; }
+        .sidebar-title { padding: 0 25px 20px 25px; color: var(--accent-blue); font-weight: 700; font-size: 22px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-switch-btn {
+            margin: auto 20px 30px 20px; padding: 14px 20px; background-color: rgba(0, 168, 255, 0.15);
+            color: var(--accent-blue); border: 1px solid var(--accent-blue); border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer; text-align: center;
+            transition: 0.3s; text-decoration: none; display: block;
+        }
+        .sidebar-switch-btn:hover { background-color: var(--accent-blue); color: white; padding-left: 20px !important; }
+
+        /* --- DASHBOARD --- */
         .dashboard { display: flex; flex-direction: column; gap: 24px; }
         .header { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .hamburger { font-size: 30px; cursor: pointer; color: var(--text-primary); background: none; border: none; padding: 0; transition: 0.3s; }
+        .hamburger:hover { color: var(--accent-blue); }
         .title-container { flex-grow: 1; text-align: center; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
         .header-controls { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
         .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--accent-red); }
-        .status-dot.connected { background-color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
-        
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--accent-red); animation: pulse 2s infinite; }
+        .status-dot.connected { background-color: var(--accent-green); animation: none; box-shadow: 0 0 10px var(--accent-green); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); } 70% { box-shadow: 0 0 0 10px rgba(231,76,60,0); } 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); } }
+
         .widget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
         .card { background-color: var(--bg-dark-secondary); border-radius: 16px; padding: 24px; border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .card-title { font-size: 18px; font-weight: 600; }
-        .sensor-value { font-size: 48px; font-weight: 700; text-align: center; margin: auto 0; }
-        .sensor-value .unit { font-size: 24px; color: var(--text-secondary); margin-left: 8px; }
+        .card-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+        .sensor-value { font-size: 48px; font-weight: 700; color: var(--text-primary); text-align: center; margin: auto 0; }
+        .sensor-value .unit { font-size: 24px; font-weight: 500; color: var(--text-secondary); margin-left: 8px; }
         .sensor-status { font-size: 28px; font-weight: 600; text-align: center; margin: auto 0; color: var(--accent-green); }
         .sensor-status.alert { color: var(--accent-red); }
-        
-        /* Switch Design */
-        .toggle-switch-container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked+.slider { background-color: var(--accent-green); }
         input:checked+.slider:before { transform: translateX(26px); }
+        input:disabled+.slider { background-color: #555 !important; cursor: not-allowed; }
+        .toggle-switch-container { display: flex; justify-content: space-between; align-items: center; }
 
-        #details-btn { background-color: var(--border-color); color: var(--text-secondary); border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); align-items: center; justify-content: center; }
-        .modal-content { background-color: var(--bg-dark-secondary); padding: 24px; border: 1px solid var(--border-color); border-radius: 16px; width: 90%; max-width: 700px; position: relative; text-align: left; }
+        /* --- BUTTONS --- */
+        #settings-btn {
+            background-color: var(--border-color); color: var(--text-secondary); border: none;
+            border-radius: 50%; width: 32px; height: 32px; font-size: 18px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        #settings-btn:hover { background-color: #4a5263; }
+
+        /* --- MODALS --- */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background-color: var(--bg-dark-secondary); padding: 24px; border: 1px solid var(--border-color); border-radius: 16px; width: 90%; max-width: 700px; position: relative; animation: fadeIn 0.3s; text-align: center; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .close-btn { color: var(--text-secondary); position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .modal-content h2 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .modal-content h3 { color: var(--accent-blue); }
+        .modal-content ul { list-style: none; padding-left: 0; margin-top: 0; }
+        .modal-content p { color: var(--text-secondary); line-height: 1.6; }
+        .details-section { margin-bottom: 20px; }
+        .guide-name { font-size: 1.3em; font-weight: 600; color: var(--text-primary); letter-spacing: 0.05em; }
+        .group-members-list li { font-size: 1.2em; font-weight: 600; color: var(--text-primary); letter-spacing: 0.05em; }
+
+        /* Emergency Modal */
+        .modal.emergency .modal-content { border: 2px solid var(--accent-red); box-shadow: 0 0 25px rgba(231,76,60,0.5); }
+        .emergency-icon { font-size: 50px; animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both infinite; }
+        @keyframes shake { 10%,90%{transform:translate3d(-1px,0,0);}20%,80%{transform:translate3d(2px,0,0);}30%,50%,70%{transform:translate3d(-4px,0,0);}40%,60%{transform:translate3d(4px,0,0);} }
+        .emergency-button { background-color: var(--accent-red); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 18px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        .emergency-button:hover { background-color: #c0392b; }
+
+        /* Settings Form */
+        .settings-form label { display: block; text-align: left; margin-bottom: 5px; font-weight: 500; color: var(--text-primary); }
+        .settings-form input[type="number"] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); background-color: #2c3340; color: var(--text-primary); border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 16px; }
+        .settings-form button { background-color: var(--accent-blue); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .settings-form button:hover { background-color: #007bbd; }
+        .input-group { text-align: left; padding: 10px; }
+        .current-threshold { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
+
+        /* History Table */
+        .history-table-container { overflow: auto; max-height: 400px; margin-top: 10px; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+        .history-table th, .history-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; white-space: nowrap; }
+        .history-table th { background-color: #2c3340; color: var(--text-primary); position: sticky; top: 0; z-index: 10; }
+        .history-table td { color: var(--text-secondary); }
     </style>
 </head>
 <body>
+
+    <!-- SIDEBAR -->
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <div class="sidebar-title">Menu</div>
+        <a href="#" onclick="openSidebarModal('details-modal')">&#128193; Project Details</a>
+        <a href="#" onclick="openSidebarModal('research-modal')">&#128196; Research Paper</a>
+        <a href="#" onclick="openSidebarModal('fault-modal')">&#128295; Fault Solutions</a>
+        <a href="#" class="sidebar-switch-btn" onclick="switchToOffline()">&#128256; Switch to Offline Mode</a>
+    </div>
+
     <div class="dashboard">
         <header class="header">
+            <button class="hamburger" onclick="openNav()">&#9776;</button>
             <div class="title-container">
-                <h1>Reliable Real Time Wireless Monitoring, Automation & Fault Detection System Using Arduino And Wi-Fi Module</h1>
+                <h1>Reliable Real Time Wireless Monitoring, Automation &amp; Fault Detection System</h1>
             </div>
             <div class="header-controls">
+                <button id="settings-btn" title="Settings">&#9881;&#65039;</button>
                 <div class="status-indicator">
                     <div id="status-dot" class="status-dot"></div>
                     <span id="status-text">Disconnected</span>
                 </div>
-                <button id="details-btn" title="Project Details">i</button>
             </div>
         </header>
 
@@ -87,105 +149,319 @@
             <div class="card"><div class="card-header"><span class="card-title">Smoke Detection</span></div><div class="sensor-value"><span id="smoke-value">--</span><span class="unit">ppm</span></div></div>
             <div class="card"><div class="card-header"><span class="card-title">Fire Sensor</span></div><div class="sensor-status" id="fire-status">Clear</div></div>
             <div class="card"><div class="card-header"><span class="card-title">PIR Motion Sensor</span></div><div class="sensor-status" id="pir-status">No Motion</div></div>
-            <div class="card"><div class="card-header"><span class="card-title">Safety Switch</span></div><div class="sensor-status alert" id="safety-status" style="font-size: 24px;">INACTIVE</div></div>
-            
+            <div class="card"><div class="card-header"><span class="card-title">Safety Switch</span></div><div class="sensor-status" id="safety-status" style="font-size:24px;">INACTIVE</div></div>
             <div class="card">
                 <div class="card-header"><span class="card-title">3-Phase Motor</span></div>
-                <div class="toggle-switch-container" style="padding: 20px 0;">
-                    <span class="toggle-label" style="font-size: 20px; font-weight: 600;">Motor Status</span>
-                    <label class="switch"><input type="checkbox" id="motor-toggle" onchange="sendCmd('motor', this.checked)"><span class="slider"></span></label>
+                <div class="toggle-switch-container" style="padding:20px 0;">
+                    <span style="font-size:20px;font-weight:600;">Motor Status</span>
+                    <label class="switch"><input type="checkbox" id="motor-toggle" onchange="sendCmd('motor',this.checked)"><span class="slider"></span></label>
                 </div>
             </div>
-            
             <div class="card">
                 <div class="card-header"><span class="card-title">Load Control</span></div>
-                <div style="display: flex; flex-direction: column; gap: 16px; margin-top: auto;">
-                    <div class="toggle-switch-container"><span>Load 1</span><label class="switch"><input type="checkbox" id="load1-toggle" onchange="sendCmd('load1', this.checked)"><span class="slider"></span></label></div>
-                    <div class="toggle-switch-container"><span>Load 2</span><label class="switch"><input type="checkbox" id="load2-toggle" onchange="sendCmd('load2', this.checked)"><span class="slider"></span></label></div>
-                    <div class="toggle-switch-container"><span>Load 3</span><label class="switch"><input type="checkbox" id="load3-toggle" onchange="sendCmd('load3', this.checked)"><span class="slider"></span></label></div>
+                <div style="display:flex;flex-direction:column;gap:16px;margin-top:auto;">
+                    <div class="toggle-switch-container"><span>Load 1</span><label class="switch"><input type="checkbox" id="load1-toggle" onchange="sendCmd('load1',this.checked)"><span class="slider"></span></label></div>
+                    <div class="toggle-switch-container"><span>Load 2</span><label class="switch"><input type="checkbox" id="load2-toggle" onchange="sendCmd('load2',this.checked)"><span class="slider"></span></label></div>
+                    <div class="toggle-switch-container"><span>Load 3</span><label class="switch"><input type="checkbox" id="load3-toggle" onchange="sendCmd('load3',this.checked)"><span class="slider"></span></label></div>
                 </div>
             </div>
         </div>
-        
-        <div class="card" style="grid-column: 1 / -1; height: 320px;">
-            <div class="card-header"><span class="card-title">Sensor History</span></div>
+
+        <!-- GRAPH CARD -->
+        <div class="card" style="min-height:320px;">
+            <div class="card-header"><span class="card-title">Sensor History (Graph)</span></div>
             <canvas id="sensorChart"></canvas>
+        </div>
+
+        <!-- HISTORY TABLE CARD -->
+        <div class="card" style="min-height:200px;">
+            <div class="card-header"><span class="card-title">Sensor &amp; Control History (Logs every 1 minute)</span></div>
+            <div class="history-table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr><th>Time</th><th>Temp (°C)</th><th>Humidity (%)</th><th>Smoke (ppm)</th><th>Fire</th><th>PIR</th><th>Motor</th><th>Load 1</th><th>Load 2</th><th>Load 3</th></tr>
+                    </thead>
+                    <tbody id="history-table-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- DETAILS MODAL -->
     <div id="details-modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2 style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Project Details</h2>
-            <div style="margin-top: 15px;">
-                <h3 style="color: var(--accent-blue);">Summary</h3>
-                <p style="color: var(--text-secondary); line-height: 1.6;">IoT-based Monitoring & Control System.</p>
-                <h3 style="color: var(--accent-blue);">Group Members</h3>
-                <ul style="list-style: none; padding: 0; font-weight: 600;">
-                    <li>TARUN ZALIYA</li><li>ANIKET JADHAV</li><li>SAMIKSHA DHAMDAR</li><li>PRATYAKSH GANVIR</li><li>DIPAK KHANORKAR</li>
+            <span class="close-btn" onclick="closeModal('details-modal')">&times;</span>
+            <h2>Project Details</h2>
+            <div class="details-section">
+                <h3>Summary</h3>
+                <p>This project is a comprehensive IoT-based monitoring and control system. The ESP8266 acts as a web server and communication bridge connected to Firebase Cloud.</p>
+            </div>
+            <div class="details-section">
+                <h3>Guide</h3>
+                <p class="guide-name">PROF. S.A. KALE</p>
+            </div>
+            <div class="details-section">
+                <h3>Group Members</h3>
+                <ul class="group-members-list">
+                    <li>TARUN ZALIYA</li><li>ANIKET JADHAV</li><li>SAMIKSHA DHAMDAR</li>
+                    <li>PRATYAKSH GANVIR</li><li>DIPAK KHANORKAR</li>
                 </ul>
             </div>
         </div>
     </div>
 
-    <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "Coz3tXL5lfiaVYxXtmC0iXBs0VjbvJUoZ53pSbHr",
-            databaseURL: "https://esp8266-3ff91-default-rtdb.firebaseio.com"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <!-- RESEARCH MODAL -->
+    <div id="research-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('research-modal')">&times;</span>
+            <h2>Research Paper</h2>
+            <p>Research paper content and documentation will be updated here in the future.</p>
+        </div>
+    </div>
 
-        // Chart Init
-        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const sensorChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [
-                { label: 'Temp (°C)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.2)', yAxisID: 'y' },
-                { label: 'Humidity (%)', data: [], borderColor: '#00a8ff', backgroundColor: 'rgba(0, 168, 255, 0.2)', yAxisID: 'y1' }
-            ]},
-            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'second' }}, y: { position: 'left' }, y1: { position: 'right' } } }
+    <!-- FAULT MODAL -->
+    <div id="fault-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('fault-modal')">&times;</span>
+            <h2>Solutions for Fault Occurred</h2>
+            <p>List of automated and manual solutions for detected system faults will be listed here.</p>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('settings-modal')">&times;</span>
+            <h2>Alert Threshold Settings</h2>
+            <form class="settings-form" onsubmit="event.preventDefault(); saveThresholds();">
+                <div class="input-group">
+                    <label>Temperature Threshold (°C)</label>
+                    <p class="current-threshold">Current: <span id="current-temp-threshold">50.0</span> °C</p>
+                    <input type="number" id="new-temp-threshold" step="0.1" min="10" max="100" required>
+                </div>
+                <div class="input-group">
+                    <label>Smoke Threshold (Analog Value)</label>
+                    <p class="current-threshold">Current: <span id="current-smoke-threshold">700</span></p>
+                    <input type="number" id="new-smoke-threshold" step="10" min="100" max="1023" required>
+                </div>
+                <button type="submit">Save Thresholds</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EMERGENCY MODAL -->
+    <div id="emergency-alert-modal" class="modal emergency">
+        <div class="modal-content">
+            <div class="emergency-icon">&#128680;</div>
+            <h2 id="emergency-title">ALERT</h2>
+            <p id="emergency-message">An emergency condition has been detected.</p>
+            <button class="emergency-button" onclick="stopBuzzer()">STOP BUZZER</button>
+        </div>
+    </div>
+
+<script>
+    // --- Firebase Config ---
+    const firebaseConfig = {
+        apiKey: "Coz3tXL5lfiaVYxXtmC0iXBs0VjbvJUoZ53pSbHr",
+        databaseURL: "https://esp8266-3ff91-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- State ---
+    let currentTempThreshold  = 50.0;
+    let currentSmokeThreshold = 700;
+    let lastLogTime = 0;
+    let latestData  = {};
+
+    // --- Chart Init ---
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+    const sensorChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                { label: 'Temp (°C)',    data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)',  tension: 0.4, yAxisID: 'y'  },
+                { label: 'Humidity (%)', data: [], borderColor: '#00a8ff', backgroundColor: 'rgba(0,168,255,0.2)', tension: 0.4, yAxisID: 'y1' }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x:  { type: 'time', time: { unit: 'second' }, ticks: { color: '#a0a0a0' }, grid: { color: '#343a46' } },
+                y:  { position: 'left',  ticks: { color: '#e74c3c' }, grid: { color: '#343a46' } },
+                y1: { position: 'right', ticks: { color: '#00a8ff' }, grid: { drawOnChartArea: false } }
+            },
+            plugins: { legend: { labels: { color: '#e6e6e6' } } }
+        }
+    });
+
+    // --- Sidebar Functions ---
+    function openNav()  { document.getElementById("mySidebar").style.width = "var(--sidebar-width)"; }
+    function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
+
+    function openSidebarModal(modalId) {
+        closeNav();
+        document.getElementById(modalId).style.display = 'flex';
+    }
+    function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+
+    // --- Settings Button ---
+    document.getElementById('settings-btn').onclick = () => {
+        document.getElementById('new-temp-threshold').value  = currentTempThreshold;
+        document.getElementById('new-smoke-threshold').value = currentSmokeThreshold;
+        document.getElementById('settings-modal').style.display = 'flex';
+    };
+    window.onclick = (e) => {
+        ['settings-modal','details-modal','research-modal','fault-modal','emergency-alert-modal'].forEach(id => {
+            const m = document.getElementById(id);
+            if (e.target == m) m.style.display = 'none';
         });
+    };
 
-        // Listen for Firebase Updates
-        db.ref("sensor").on("value", (snapshot) => {
-            const data = snapshot.val();
-            if(!data) return;
+    function saveThresholds() {
+        const nt = parseFloat(document.getElementById('new-temp-threshold').value);
+        const ns = parseInt(document.getElementById('new-smoke-threshold').value);
+        if (!isNaN(nt) && !isNaN(ns)) {
+            currentTempThreshold  = nt;
+            currentSmokeThreshold = ns;
+            document.getElementById('current-temp-threshold').textContent  = nt.toFixed(1);
+            document.getElementById('current-smoke-threshold').textContent = ns;
+            // Firebase pe save karo taaki ESP8266 bhi read kar sake
+            db.ref("settings").set({ tempThreshold: nt, smokeThreshold: ns });
+            closeModal('settings-modal');
+        }
+    }
 
-            document.getElementById('temp-value').textContent = data.temperature || "--";
-            document.getElementById('humidity-value').textContent = data.humidity || "--";
-            document.getElementById('smoke-value').textContent = data.smoke || "--";
-            document.getElementById('safety-status').textContent = data.safety ? 'ACTIVE' : 'INACTIVE';
-            
-            const fire = document.getElementById('fire-status');
-            if(data.fire) { fire.textContent = 'Detected!'; fire.classList.add('alert'); } else { fire.textContent = 'Clear'; fire.classList.remove('alert'); }
+    // --- History Table Log ---
+    function logDataToTable(data) {
+        const tableBody = document.getElementById('history-table-body');
+        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const newRow = tableBody.insertRow(0);
+        const motorState = document.getElementById('motor-toggle').checked;
+        const load1State = document.getElementById('load1-toggle').checked;
+        const load2State = document.getElementById('load2-toggle').checked;
+        const load3State = document.getElementById('load3-toggle').checked;
+        const cellData   = [
+            timestamp,
+            (data.temperature || 0).toFixed(1),
+            (data.humidity    || 0).toFixed(1),
+            data.smoke || 0,
+            data.fire   ? 'DETECTED' : 'CLEAR',
+            data.pir    ? 'MOTION'   : 'CLEAR',
+            motorState  ? 'ON' : 'OFF',
+            load1State  ? 'ON' : 'OFF',
+            load2State  ? 'ON' : 'OFF',
+            load3State  ? 'ON' : 'OFF'
+        ];
+        cellData.forEach(text => { const cell = newRow.insertCell(); cell.textContent = text; });
+        if (tableBody.rows.length > 60) tableBody.deleteRow(60);
+    }
 
-            const pir = document.getElementById('pir-status');
-            pir.textContent = data.pir ? 'Motion!' : 'No Motion';
+    // --- Emergency Alert Check ---
+    function checkAlerts(data) {
+        const modal       = document.getElementById('emergency-alert-modal');
+        const titleEl     = document.getElementById('emergency-title');
+        const fireAlert   = data.fire === true;
+        const tempAlert   = (data.temperature || 0) > currentTempThreshold;
+        const smokeAlert  = (data.smoke || 0) > currentSmokeThreshold;
 
-            // Chart Update
-            const now = new Date();
-            sensorChart.data.labels.push(now);
-            sensorChart.data.datasets[0].data.push(data.temperature);
-            sensorChart.data.datasets[1].data.push(data.humidity);
-            if(sensorChart.data.labels.length > 20) { sensorChart.data.labels.shift(); sensorChart.data.datasets.forEach(d => d.data.shift()); }
-            sensorChart.update('none');
-
-            document.getElementById('status-dot').classList.add('connected');
-            document.getElementById('status-text').textContent = 'Connected (Firebase)';
-        });
-
-        // Command Function
-        function sendCmd(device, state) {
-            db.ref("control/" + device).set(state ? 1 : 0);
+        if (fireAlert) {
+            titleEl.innerText    = "🚨 FIRE ALERT 🚨";
+            modal.style.display  = 'flex';
+        } else if (tempAlert) {
+            titleEl.innerText    = "🌡️ OVERTEMPERATURE ALERT 🌡️";
+            modal.style.display  = 'flex';
+        } else if (smokeAlert) {
+            titleEl.innerText    = "💨 HIGH SMOKE ALERT 💨";
+            modal.style.display  = 'flex';
+        } else {
+            modal.style.display  = 'none';
         }
 
-        // Modal Logic
-        const modal = document.getElementById('details-modal');
-        document.getElementById('details-btn').onclick = () => modal.style.display = "flex";
-        document.getElementsByClassName('close-btn')[0].onclick = () => modal.style.display = "none";
-        window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; }
-    </script>
+        // Safety / Fire lock — sab toggles disable
+        const lock = data.safety || fireAlert;
+        document.querySelectorAll('input[type="checkbox"]').forEach(t => t.disabled = lock);
+    }
+
+    // --- Stop Buzzer ---
+    function stopBuzzer() {
+        db.ref("control/buzzer").set(0);
+        document.getElementById('emergency-alert-modal').style.display = 'none';
+    }
+
+    // --- Switch to Offline ---
+    function switchToOffline() {
+        closeNav();
+        if (confirm("Offline Mode me switch karein?\nESP8266 restart hoga aur 'GROUP 1 PROJECT' WiFi hotspot banana shuru karega.")) {
+            db.ref("control/mode").set("offline");
+            alert("Command bhej diya! 'GROUP 1 PROJECT' WiFi se connect karo aur 192.168.4.1 kholo.");
+        }
+    }
+
+    // --- Firebase Listener ---
+    db.ref("sensor").on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        latestData = data;
+
+        // Sensor cards update
+        document.getElementById('temp-value').textContent     = (data.temperature || 0).toFixed(1);
+        document.getElementById('humidity-value').textContent = (data.humidity    || 0).toFixed(1);
+        document.getElementById('smoke-value').textContent    = data.smoke || 0;
+
+        const fireEl   = document.getElementById('fire-status');
+        fireEl.textContent = data.fire ? 'Detected!' : 'Clear';
+        data.fire ? fireEl.classList.add('alert') : fireEl.classList.remove('alert');
+
+        const pirEl    = document.getElementById('pir-status');
+        pirEl.textContent  = data.pir  ? 'Motion Detected!' : 'No Motion';
+        data.pir  ? pirEl.classList.add('alert')    : pirEl.classList.remove('alert');
+
+        const safetyEl = document.getElementById('safety-status');
+        safetyEl.textContent = data.safety ? 'ACTIVE' : 'INACTIVE';
+        data.safety ? safetyEl.classList.remove('alert') : safetyEl.classList.add('alert');
+
+        // Chart update
+        const now = new Date();
+        sensorChart.data.labels.push(now);
+        sensorChart.data.datasets[0].data.push(data.temperature);
+        sensorChart.data.datasets[1].data.push(data.humidity);
+        if (sensorChart.data.labels.length > 20) {
+            sensorChart.data.labels.shift();
+            sensorChart.data.datasets.forEach(d => d.data.shift());
+        }
+        sensorChart.update('none');
+
+        // Status dot
+        document.getElementById('status-dot').classList.add('connected');
+        document.getElementById('status-text').textContent = 'Connected (Firebase)';
+
+        // Emergency check
+        checkAlerts(data);
+
+        // History table — har 1 minute me log
+        const now2 = Date.now();
+        if (now2 - lastLogTime >= 60000) {
+            logDataToTable(data);
+            lastLogTime = now2;
+        }
+    });
+
+    // Control toggle Firebase sync
+    db.ref("control").on("value", (snapshot) => {
+        const ctrl = snapshot.val();
+        if (!ctrl) return;
+        if (ctrl.motor !== undefined) document.getElementById('motor-toggle').checked = ctrl.motor === 1;
+        if (ctrl.load1 !== undefined) document.getElementById('load1-toggle').checked = ctrl.load1 === 1;
+        if (ctrl.load2 !== undefined) document.getElementById('load2-toggle').checked = ctrl.load2 === 1;
+        if (ctrl.load3 !== undefined) document.getElementById('load3-toggle').checked = ctrl.load3 === 1;
+    });
+
+    // Send command to Firebase
+    function sendCmd(device, state) {
+        db.ref("control/" + device).set(state ? 1 : 0);
+    }
+</script>
 </body>
 </html>
