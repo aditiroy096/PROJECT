@@ -11,13 +11,60 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --bg-dark-primary: #12151c; --bg-dark-secondary: #1c202a; --text-primary: #e6e6e6;
             --text-secondary: #a0a0a0; --accent-blue: #00a8ff; --accent-green: #2ecc71;
             --accent-red: #e74c3c; --border-color: #343a46; --sidebar-width: 280px;
         }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark-primary); color: var(--text-primary); margin: 0; padding: 24px; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark-primary); color: var(--text-primary); margin: 0; padding: 0; }
+
+        /* ===================== LOGIN PAGE ===================== */
+        #login-page {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 24px;
+            background: radial-gradient(ellipse at top left, #1a1f2e 0%, #12151c 60%);
+        }
+        .login-box {
+            background-color: var(--bg-dark-secondary); border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 40px; width: 100%; max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: fadeIn 0.4s ease;
+        }
+        .login-logo { text-align: center; margin-bottom: 28px; }
+        .login-logo .logo-icon { font-size: 48px; }
+        .login-logo h2 { margin: 10px 0 4px; font-size: 20px; font-weight: 700; color: var(--accent-blue); }
+        .login-logo p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+        .login-divider { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
+        .login-field { margin-bottom: 18px; }
+        .login-field label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+        .login-field input {
+            width: 100%; padding: 12px 16px; background-color: #12151c;
+            border: 1px solid var(--border-color); border-radius: 10px;
+            color: var(--text-primary); font-size: 15px; font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+        }
+        .login-field input:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0,168,255,0.15); }
+        .login-btn {
+            width: 100%; padding: 13px; background-color: var(--accent-blue);
+            color: white; border: none; border-radius: 10px; font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        .login-btn:hover { background-color: #007bbd; transform: translateY(-1px); }
+        .login-error {
+            display: none; background-color: rgba(231,76,60,0.15);
+            border: 1px solid var(--accent-red); border-radius: 8px;
+            padding: 10px 14px; font-size: 13px; color: var(--accent-red);
+            margin-top: 14px; text-align: center;
+        }
+        .login-footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--text-secondary); }
+
+        /* ===================== MAIN DASHBOARD ===================== */
+        #main-dashboard { display: none; padding: 24px; }
 
         /* --- SIDEBAR --- */
         .sidebar {
@@ -33,16 +80,21 @@
         .sidebar a:hover { color: var(--accent-blue); background-color: rgba(255,255,255,0.05); padding-left: 35px; }
         .sidebar .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; cursor: pointer; border-bottom: none !important; }
         .sidebar-title { padding: 0 25px 20px 25px; color: var(--accent-blue); font-weight: 700; font-size: 22px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-bottom { margin-top: auto; padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px; }
         .sidebar-switch-btn {
-            margin: auto 20px 30px 20px; padding: 14px 20px;
-            background-color: rgba(0,168,255,0.15); color: var(--accent-blue);
-            border: 1px solid var(--accent-blue); border-radius: 12px;
-            font-size: 16px; font-weight: 600; cursor: pointer; text-align: center;
-            transition: 0.3s; text-decoration: none; display: block;
+            padding: 14px 20px; background-color: rgba(0,168,255,0.15); color: var(--accent-blue);
+            border: 1px solid var(--accent-blue); border-radius: 12px; font-size: 16px; font-weight: 600;
+            cursor: pointer; text-align: center; transition: 0.3s; text-decoration: none; display: block;
         }
         .sidebar-switch-btn:hover { background-color: var(--accent-blue); color: white; padding-left: 20px !important; }
+        .sidebar-logout-btn {
+            padding: 14px 20px; background-color: rgba(231,76,60,0.15); color: var(--accent-red);
+            border: 1px solid var(--accent-red); border-radius: 12px; font-size: 16px; font-weight: 600;
+            cursor: pointer; text-align: center; transition: 0.3s; text-decoration: none; display: block;
+        }
+        .sidebar-logout-btn:hover { background-color: var(--accent-red); color: white; padding-left: 20px !important; }
 
-        /* --- DASHBOARD --- */
+        /* --- DASHBOARD LAYOUT --- */
         .dashboard { display: flex; flex-direction: column; gap: 24px; }
         .header { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .hamburger { font-size: 30px; cursor: pointer; color: var(--text-primary); background: none; border: none; padding: 0; transition: 0.3s; }
@@ -73,7 +125,7 @@
         input:disabled+.slider { background-color: #555 !important; cursor: not-allowed; }
         .toggle-switch-container { display: flex; justify-content: space-between; align-items: center; }
 
-        /* --- BUTTONS --- */
+        /* Buttons */
         #settings-btn {
             background-color: var(--border-color); color: var(--text-secondary); border: none;
             border-radius: 50%; width: 32px; height: 32px; font-size: 18px; font-weight: bold;
@@ -81,7 +133,29 @@
         }
         #settings-btn:hover { background-color: #4a5263; }
 
-        /* --- MODALS --- */
+        /* Graph */
+        .graph-card { height: 320px; overflow: hidden; }
+        .graph-card .card-header { margin-bottom: 10px; }
+        .graph-wrapper { position: relative; height: calc(100% - 50px); }
+
+        /* History Table */
+        .history-table-container { overflow: auto; max-height: 400px; margin-top: 10px; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+        .history-table th, .history-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; white-space: nowrap; }
+        .history-table th { background-color: #2c3340; color: var(--text-primary); position: sticky; top: 0; z-index: 10; }
+        .history-table td { color: var(--text-secondary); }
+
+        /* Download Button */
+        .download-btn {
+            background-color: rgba(46,204,113,0.15); color: var(--accent-green);
+            border: 1px solid var(--accent-green); border-radius: 8px;
+            padding: 6px 14px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+        .download-btn:hover { background-color: var(--accent-green); color: white; }
+
+        /* MODALS */
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background-color: var(--bg-dark-secondary); padding: 24px; border: 1px solid var(--border-color); border-radius: 16px; width: 90%; max-width: 700px; position: relative; animation: fadeIn 0.3s; text-align: center; }
         @keyframes fadeIn { from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);} }
@@ -94,6 +168,37 @@
         .guide-name { font-size: 1.3em; font-weight: 600; color: var(--text-primary); letter-spacing: 0.05em; }
         .group-members-list li { font-size: 1.2em; font-weight: 600; color: var(--text-primary); letter-spacing: 0.05em; }
 
+        /* Research Paper Modal */
+        .research-modal-content {
+            max-width: 800px; max-height: 85vh; overflow-y: auto; text-align: left;
+        }
+        .research-modal-content::-webkit-scrollbar { width: 6px; }
+        .research-modal-content::-webkit-scrollbar-track { background: var(--bg-dark-primary); }
+        .research-modal-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        .research-title { font-size: 18px; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 6px; line-height: 1.4; }
+        .research-authors { text-align: center; color: var(--accent-blue); font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .research-affiliation { text-align: center; color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; }
+        .research-abstract { background-color: rgba(0,168,255,0.07); border-left: 3px solid var(--accent-blue); padding: 14px 16px; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
+        .research-abstract strong { color: var(--text-primary); }
+        .research-section-title { font-size: 15px; font-weight: 700; color: var(--accent-blue); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; }
+        .research-body p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 12px; }
+        .research-body ol { color: var(--text-secondary); font-size: 14px; padding-left: 20px; }
+        .research-body ol li { margin-bottom: 6px; line-height: 1.6; }
+        .research-ref-list { color: var(--text-secondary); font-size: 13px; padding-left: 20px; }
+        .research-ref-list li { margin-bottom: 5px; line-height: 1.5; }
+
+        /* Fault Modal */
+        .fault-modal-content { max-width: 750px; max-height: 85vh; overflow-y: auto; text-align: left; }
+        .fault-modal-content::-webkit-scrollbar { width: 6px; }
+        .fault-modal-content::-webkit-scrollbar-track { background: var(--bg-dark-primary); }
+        .fault-modal-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        .fault-item { background-color: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .fault-item-title { font-size: 15px; font-weight: 700; color: var(--accent-red); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .fault-steps { list-style: none; padding: 0; margin: 0; }
+        .fault-steps li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+        .fault-steps li:last-child { border-bottom: none; }
+        .fault-step-num { background-color: var(--accent-blue); color: white; border-radius: 50%; min-width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-top: 1px; }
+
         /* Emergency Modal */
         .modal.emergency .modal-content { border: 2px solid var(--accent-red); box-shadow: 0 0 25px rgba(231,76,60,0.5); }
         .emergency-icon { font-size: 50px; animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both infinite; }
@@ -101,36 +206,42 @@
         .emergency-button { background-color: var(--accent-red); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 18px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         .emergency-button:hover { background-color: #c0392b; }
 
-        /* Settings Form */
+        /* Settings */
         .settings-form label { display: block; text-align: left; margin-bottom: 5px; font-weight: 500; color: var(--text-primary); }
-        .settings-form input[type="number"] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); background-color: #2c3340; color: var(--text-primary); border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 16px; }
+        .settings-form input[type="number"] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); background-color: #2c3340; color: var(--text-primary); border-radius: 8px; text-align: center; font-size: 16px; }
         .settings-form button { background-color: var(--accent-blue); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 16px; cursor: pointer; transition: 0.3s; }
         .settings-form button:hover { background-color: #007bbd; }
         .input-group { text-align: left; padding: 10px; }
         .current-threshold { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
-
-        /* --- GRAPH CARD --- */
-        .graph-card {
-            height: 320px;
-            overflow: hidden;
-        }
-        .graph-card .card-header {
-            margin-bottom: 10px;
-        }
-        .graph-wrapper {
-            position: relative;
-            height: calc(100% - 50px);
-        }
-
-        /* --- HISTORY TABLE --- */
-        .history-table-container { overflow: auto; max-height: 400px; margin-top: 10px; }
-        .history-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-        .history-table th, .history-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; white-space: nowrap; }
-        .history-table th { background-color: #2c3340; color: var(--text-primary); position: sticky; top: 0; z-index: 10; }
-        .history-table td { color: var(--text-secondary); }
     </style>
 </head>
 <body>
+
+<!-- ==================== LOGIN PAGE ==================== -->
+<div id="login-page">
+    <div class="login-box">
+        <div class="login-logo">
+            <div class="logo-icon">⚡</div>
+            <h2>GROUP 1 PROJECT</h2>
+            <p>Monitoring & Automation System</p>
+        </div>
+        <hr class="login-divider">
+        <div class="login-field">
+            <label>Operator ID</label>
+            <input type="text" id="login-userid" placeholder="Enter your ID" autocomplete="off">
+        </div>
+        <div class="login-field">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter your password" onkeydown="if(event.key==='Enter') doLogin()">
+        </div>
+        <button class="login-btn" onclick="doLogin()">LOGIN</button>
+        <div class="login-error" id="login-error">❌ Invalid Operator ID or Password. Please try again.</div>
+        <div class="login-footer">Jhulelal Institute of Technology, Nagpur<br>Department of Electrical Engineering</div>
+    </div>
+</div>
+
+<!-- ==================== MAIN DASHBOARD ==================== -->
+<div id="main-dashboard">
 
     <!-- SIDEBAR -->
     <div id="mySidebar" class="sidebar">
@@ -139,7 +250,10 @@
         <a href="#" onclick="openSidebarModal('details-modal')">&#128193; Project Details</a>
         <a href="#" onclick="openSidebarModal('research-modal')">&#128196; Research Paper</a>
         <a href="#" onclick="openSidebarModal('fault-modal')">&#128295; Fault Solutions</a>
-        <a href="#" class="sidebar-switch-btn" onclick="switchToOffline()">&#128256; Switch to Offline Mode</a>
+        <div class="sidebar-bottom">
+            <a href="#" class="sidebar-switch-btn" onclick="switchToOffline()">&#128256; Switch to Offline Mode</a>
+            <a href="#" class="sidebar-logout-btn" onclick="doLogout()">&#128275; Logout</a>
+        </div>
     </div>
 
     <div class="dashboard">
@@ -182,29 +296,22 @@
             </div>
         </div>
 
-        <!-- GRAPH CARD — Fixed Height -->
+        <!-- GRAPH CARD -->
         <div class="card graph-card">
-            <div class="card-header">
-                <span class="card-title">Sensor History (Graph)</span>
-            </div>
-            <div class="graph-wrapper">
-                <canvas id="sensorChart"></canvas>
-            </div>
+            <div class="card-header"><span class="card-title">Sensor History (Graph)</span></div>
+            <div class="graph-wrapper"><canvas id="sensorChart"></canvas></div>
         </div>
 
-        <!-- HISTORY TABLE CARD — Same Width, Graph ke Neeche -->
+        <!-- HISTORY TABLE CARD -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Sensor &amp; Control History (Logs every 1 minute)</span>
+                <button class="download-btn" onclick="downloadPDF()">&#11123; Download Report</button>
             </div>
             <div class="history-table-container">
                 <table class="history-table">
                     <thead>
-                        <tr>
-                            <th>Time</th><th>Temp (°C)</th><th>Humidity (%)</th>
-                            <th>Smoke (ppm)</th><th>Fire</th><th>PIR</th>
-                            <th>Motor</th><th>Load 1</th><th>Load 2</th><th>Load 3</th>
-                        </tr>
+                        <tr><th>Time</th><th>Temp (°C)</th><th>Humidity (%)</th><th>Smoke (ppm)</th><th>Fire</th><th>PIR</th><th>Motor</th><th>Load 1</th><th>Load 2</th><th>Load 3</th></tr>
                     </thead>
                     <tbody id="history-table-body"></tbody>
                 </table>
@@ -212,13 +319,14 @@
         </div>
     </div>
 
-    <!-- DETAILS MODAL -->
+    <!-- ====== PROJECT DETAILS MODAL ====== -->
     <div id="details-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('details-modal')">&times;</span>
             <h2>Project Details</h2>
-            <div class="details-section"><h3>Summary</h3><p>This project is a comprehensive IoT-based monitoring and control system. The ESP8266 acts as a web server and communication bridge connected to Firebase Cloud.</p></div>
+            <div class="details-section"><h3>Summary</h3><p>This project is a comprehensive IoT-based monitoring and control system. The ESP8266 acts as a web server and communication bridge connected to Firebase Cloud. Sensors monitor temperature, humidity, smoke, fire, and motion in real time.</p></div>
             <div class="details-section"><h3>Guide</h3><p class="guide-name">PROF. S.A. KALE</p></div>
+            <div class="details-section"><h3>Department</h3><p style="color:var(--text-primary);font-weight:600;">Electrical Engineering — Jhulelal Institute of Technology, Nagpur</p></div>
             <div class="details-section"><h3>Group Members</h3>
                 <ul class="group-members-list">
                     <li>TARUN ZALIYA</li><li>ANIKET JADHAV</li><li>SAMIKSHA DHAMDAR</li>
@@ -228,25 +336,166 @@
         </div>
     </div>
 
-    <!-- RESEARCH MODAL -->
+    <!-- ====== RESEARCH PAPER MODAL ====== -->
     <div id="research-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content research-modal-content">
             <span class="close-btn" onclick="closeModal('research-modal')">&times;</span>
-            <h2>Research Paper</h2>
-            <p>Research paper content and documentation will be updated here in the future.</p>
+            <h2 style="text-align:center;">Research Paper</h2>
+
+            <p class="research-title">Reliable Real Time Wireless Monitoring, Automation and Fault Detection System</p>
+            <p class="research-authors">Prof. Sandip Kale &nbsp;|&nbsp; Tarun Zaliya &nbsp;|&nbsp; Pratyaksh Ganvir &nbsp;|&nbsp; Dipak Khanorkar &nbsp;|&nbsp; Aniket Jadhav &nbsp;|&nbsp; Samiksha Dhamdar</p>
+            <p class="research-affiliation">Department of Electrical Engineering, Jhulelal Institute of Technology, Nagpur, Maharashtra, India</p>
+
+            <div class="research-abstract">
+                <p style="margin:0;font-size:14px;color:var(--text-secondary);line-height:1.7;"><strong style="color:var(--text-primary);">Abstract —</strong> Recent advancements in the Internet of Things (IoT) have enabled the development of intelligent monitoring systems capable of collecting and transmitting data in real time. This paper presents the design and implementation of a wireless monitoring, automation, and fault detection system based on the ESP8266 Wi-Fi microcontroller. The proposed system integrates multiple sensors such as a DHT11 temperature and humidity sensor, MQ2 gas sensor, PIR motion sensor, and flame sensor to monitor environmental conditions and detect potential hazards. Sensor data is processed by the ESP8266 and transmitted wirelessly to a cloud server where it can be accessed through a web interface using mobile devices or computers. The system also incorporates a relay module that enables remote control of electrical appliances. The monitoring system can operate both with internet connectivity through cloud services and without internet using direct Wi-Fi communication. Experimental implementation shows that the system is reliable, economical, and suitable for real-time safety monitoring and automation applications.</p>
+            </div>
+
+            <div class="research-body">
+                <p class="research-section-title">I. Introduction</p>
+                <p>The continuous growth of digital technologies has significantly transformed the way monitoring and control systems are designed. In recent years, the Internet of Things (IoT) has emerged as a powerful technology that enables communication between physical devices through wireless networks. IoT-based systems allow sensors and embedded devices to collect environmental data and transmit it to remote servers for analysis and monitoring.</p>
+                <p>Conventional monitoring systems often rely on manual supervision and lack the ability to provide immediate alerts during emergency situations such as fire accidents, gas leakage, or unauthorized movement. The integration of IoT technology with environmental sensors offers an efficient solution for real-time monitoring and automation.</p>
+                <p>The ESP8266 microcontroller has gained popularity in IoT applications because it combines processing capability with integrated Wi-Fi connectivity at a low cost. The system proposed in this research focuses on the development of a real-time wireless monitoring and automation platform that integrates multiple sensors with an ESP8266 microcontroller.</p>
+
+                <p class="research-section-title">II. Review of Literature</p>
+                <p>Several researchers have proposed IoT-based monitoring systems to improve energy management, environmental safety, and automation. Santos and Ferreira developed an IoT-based monitoring system for real-time tracking of electrical power consumption. Josué et al. designed a home energy monitoring prototype using wireless communication. Kim et al. implemented a ZigBee-based monitoring system for energy management. Balamurugan and Saravanakamalam proposed an IoT-based energy management system using internet connectivity.</p>
+                <p>Based on these studies, it is clear that there is a need for a low-cost and flexible monitoring system that integrates environmental sensing, automation, and wireless communication. The proposed system addresses this requirement by combining several sensors with the ESP8266 Wi-Fi microcontroller and cloud-based data monitoring.</p>
+
+                <p class="research-section-title">III. Methodology</p>
+                <p>The developed monitoring system consists of several hardware components connected to the ESP8266 microcontroller:</p>
+                <ol>
+                    <li><strong style="color:var(--text-primary);">ESP8266 Wi-Fi Microcontroller</strong> — Main controller with integrated Wi-Fi for wireless communication. Collects sensor data, processes information, and transmits to cloud server.</li>
+                    <li><strong style="color:var(--text-primary);">DHT11 Temperature & Humidity Sensor</strong> — Measures environmental temperature and relative humidity. Provides digital output directly readable by ESP8266.</li>
+                    <li><strong style="color:var(--text-primary);">MQ2 Gas & Smoke Sensor</strong> — Detects combustible gases such as LPG, methane, propane, and smoke. Works based on change in electrical resistance when exposed to different gases.</li>
+                    <li><strong style="color:var(--text-primary);">PIR Motion Sensor</strong> — Detects motion by sensing changes in infrared radiation. Useful for security monitoring systems.</li>
+                    <li><strong style="color:var(--text-primary);">Flame Sensor</strong> — Detects fire by sensing infrared light emitted from flames. Triggers alert when flame radiation is detected within range.</li>
+                    <li><strong style="color:var(--text-primary);">Relay Module</strong> — Acts as electrically operated switch for controlling high-voltage appliances. Provides electrical isolation between control circuit and load circuit.</li>
+                    <li><strong style="color:var(--text-primary);">Firebase Cloud Platform</strong> — Stores and manages sensor data. Enables real-time data synchronization between hardware and web interface.</li>
+                </ol>
+
+                <p class="research-section-title">IV. Working</p>
+                <p>The system continuously collects environmental data from various sensors connected to the ESP8266. The microcontroller processes the incoming sensor data and compares it with predefined threshold values. If any abnormal condition is detected such as rise in temperature, gas leakage, fire detection, or motion in a restricted area, the system immediately generates an alert.</p>
+                <p>The system can function in two modes: <strong style="color:var(--text-primary);">Offline Mode</strong> — direct connection between ESP8266 and user device through Wi-Fi; and <strong style="color:var(--text-primary);">Online Mode</strong> — data transmission through cloud services for remote monitoring.</p>
+
+                <p class="research-section-title">V. Results and Discussion</p>
+                <p>The developed system was tested under various environmental conditions to evaluate its performance. The sensors successfully detected temperature variations, humidity changes, smoke presence, and motion in the monitored environment. The ESP8266 microcontroller effectively processed the sensor data and transmitted the information to the cloud platform. The relay module enabled remote switching of electrical appliances, demonstrating the automation capability of the system.</p>
+
+                <p class="research-section-title">VI. Conclusion</p>
+                <p>This research presented the design and implementation of a real-time wireless monitoring, automation, and fault detection system using the ESP8266 microcontroller. The system integrates multiple environmental sensors to monitor temperature, humidity, gas leakage, motion, and fire conditions. The proposed system offers several advantages including low cost, real-time monitoring capability, remote accessibility, and improved safety. Future improvements may include integrating additional sensors, enhancing mobile application interfaces, and implementing advanced data analytics for predictive fault detection.</p>
+
+                <p class="research-section-title">References</p>
+                <ol class="research-ref-list">
+                    <li>Rajeev Piyare, "Internet of Things: Ubiquitous Home Control and Monitoring System using Android based Smart Phone," International Journal of Internet of Things, 2013.</li>
+                    <li>A. Al-Fuqaha, et al., "Internet of Things: A Survey on Enabling Technologies, Protocols and Applications," IEEE Communications Surveys & Tutorials, 2015.</li>
+                    <li>D. Evans, "The Internet of Things: How the Next Evolution of the Internet is Changing Everything," Cisco Systems White Paper, 2011.</li>
+                    <li>Marco Schwartz, Internet of Things with ESP8266, Packt Publishing, 2016.</li>
+                    <li>Espressif Systems, "ESP8266EX Datasheet," 2020.</li>
+                    <li>Adafruit Industries, "DHT11 Temperature and Humidity Sensor Technical Guide," 2019.</li>
+                    <li>Winsen Electronics Technology, "MQ-2 Gas Sensor Datasheet," 2018.</li>
+                    <li>Google, "Firebase Realtime Database Documentation," 2023.</li>
+                    <li>A. Jain and S. Kumar, "Wireless Sensor Network Based Environmental Monitoring Using ESP8266," International Journal of Innovative Technology and Exploring Engineering, 2019.</li>
+                    <li>T. Perumal, "IoT Based Smart Home Automation Using Wi-Fi and ESP8266," International Journal of Engineering Research and Technology, 2018.</li>
+                </ol>
+            </div>
         </div>
     </div>
 
-    <!-- FAULT MODAL -->
+    <!-- ====== FAULT SOLUTIONS MODAL ====== -->
     <div id="fault-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content fault-modal-content">
             <span class="close-btn" onclick="closeModal('fault-modal')">&times;</span>
-            <h2>Solutions for Fault Occurred</h2>
-            <p>List of automated and manual solutions for detected system faults will be listed here.</p>
+            <h2 style="text-align:center;">&#128295; Fault Detection & Troubleshooting Guide</h2>
+
+            <div class="fault-item">
+                <div class="fault-item-title">🔥 FAULT 1: Fire Alert Triggered</div>
+                <ul class="fault-steps">
+                    <li><span class="fault-step-num">1</span>Check the monitored area immediately for any visible fire or smoke source.</li>
+                    <li><span class="fault-step-num">2</span>Press "STOP BUZZER" on the dashboard to silence the alarm.</li>
+                    <li><span class="fault-step-num">3</span>All electrical loads are automatically turned OFF by the system for safety — verify this on the dashboard.</li>
+                    <li><span class="fault-step-num">4</span>If fire is confirmed, evacuate the area and contact emergency services immediately.</li>
+                    <li><span class="fault-step-num">5</span>If it is a false alarm (candle, lighter, etc.), remove the heat source from sensor range.</li>
+                    <li><span class="fault-step-num">6</span>Once area is clear, use the Safety Switch to re-enable load control on the dashboard.</li>
+                    <li><span class="fault-step-num">7</span>Clean the flame sensor lens with a dry cloth if false triggers occur frequently.</li>
+                </ul>
+            </div>
+
+            <div class="fault-item">
+                <div class="fault-item-title">💨 FAULT 2: High Smoke / Gas Alert</div>
+                <ul class="fault-steps">
+                    <li><span class="fault-step-num">1</span>Immediately ventilate the area — open windows and doors.</li>
+                    <li><span class="fault-step-num">2</span>Identify the source of smoke or gas (cooking, LPG leak, burning material).</li>
+                    <li><span class="fault-step-num">3</span>Turn off LPG/gas cylinders or cooking appliances at the source.</li>
+                    <li><span class="fault-step-num">4</span>Press "STOP BUZZER" on dashboard once area is safe.</li>
+                    <li><span class="fault-step-num">5</span>Check smoke threshold in Settings — increase it if cooking smoke causes frequent false alarms.</li>
+                    <li><span class="fault-step-num">6</span>Allow the MQ2 sensor to breathe fresh air for 5 minutes before system resets to normal.</li>
+                    <li><span class="fault-step-num">7</span>If gas leak is suspected, do NOT operate any electrical switches — leave the building and call gas agency.</li>
+                </ul>
+            </div>
+
+            <div class="fault-item">
+                <div class="fault-item-title">🌡️ FAULT 3: Overtemperature Alert</div>
+                <ul class="fault-steps">
+                    <li><span class="fault-step-num">1</span>Check the monitored area for any overheating equipment or open heat sources near the sensor.</li>
+                    <li><span class="fault-step-num">2</span>Turn off any heating appliances in the area.</li>
+                    <li><span class="fault-step-num">3</span>Improve ventilation or air conditioning in the monitored space.</li>
+                    <li><span class="fault-step-num">4</span>Press "STOP BUZZER" once temperature starts dropping on the dashboard.</li>
+                    <li><span class="fault-step-num">5</span>If temperature reading seems incorrect, check DHT11 sensor connections (VCC, GND, DATA).</li>
+                    <li><span class="fault-step-num">6</span>Adjust temperature threshold in Settings (⚙️) if the environment naturally runs warm.</li>
+                </ul>
+            </div>
+
+            <div class="fault-item">
+                <div class="fault-item-title">📡 FAULT 4: Dashboard Shows "Disconnected"</div>
+                <ul class="fault-steps">
+                    <li><span class="fault-step-num">1</span>Check that the ESP8266 is powered ON (LED should be glowing).</li>
+                    <li><span class="fault-step-num">2</span>Verify that your device (phone/laptop) is connected to the internet.</li>
+                    <li><span class="fault-step-num">3</span>Check that the home WiFi router is working and ESP8266 is within range.</li>
+                    <li><span class="fault-step-num">4</span>Open Serial Monitor (115200 baud) — check if ESP8266 shows "WiFi CONNECTED".</li>
+                    <li><span class="fault-step-num">5</span>If WiFi connection failed, re-upload the code with correct SSID and password.</li>
+                    <li><span class="fault-step-num">6</span>Check Firebase console — if database rules are set to private, update them to allow read/write.</li>
+                    <li><span class="fault-step-num">7</span>Try power cycling the ESP8266 (unplug and replug power).</li>
+                </ul>
+            </div>
+
+            <div class="fault-item">
+                <div class="fault-item-title">🔌 FAULT 5: Relay / Load Not Responding to Toggle</div>
+                <ul class="fault-steps">
+                    <li><span class="fault-step-num">1</span>Check if Safety Switch is ACTIVE on dashboard — loads are locked when safety is ON.</li>
+                    <li><span class="fault-step-num">2</span>Check if any alert (Fire/Temp/Smoke) is active — all loads auto-disable during alerts.</li>
+                    <li><span class="fault-step-num">3</span>Verify relay module VCC is connected to 5V (not 3.3V).</li>
+                    <li><span class="fault-step-num">4</span>Check that relay GND is common with ESP8266 GND.</li>
+                    <li><span class="fault-step-num">5</span>Verify IN1-IN4 pins of relay match D5-D8 on ESP8266.</li>
+                    <li><span class="fault-step-num">6</span>Check relay LED indicator — it should light up when toggle is ON.</li>
+                    <li><span class="fault-step-num">7</span>Use a multimeter to measure voltage at relay output terminals (NO and COM).</li>
+                </ul>
+            </div>
+
+            <div class="fault-item">
+                <div class="fault-item-title">🌀 FAULT 6: Sensor Showing Wrong / Zero Values</div>
+                <ul class="fault-steps">
+                    <li><span class="fault-step-num">1</span>Check DHT11 connections — VCC to 3.3V, GND to GND, DATA to D4.</li>
+                    <li><span class="fault-step-num">2</span>Open Serial Monitor — if temperature shows 0.0°C, DHT11 is not responding.</li>
+                    <li><span class="fault-step-num">3</span>Try replacing DHT11 sensor — they can fail due to static discharge.</li>
+                    <li><span class="fault-step-num">4</span>For MQ2 sensor, allow 2-3 minutes warmup time after power ON before readings stabilize.</li>
+                    <li><span class="fault-step-num">5</span>Check A0 pin connection for smoke sensor analog output.</li>
+                    <li><span class="fault-step-num">6</span>Ensure no two sensors share the same pin — verify pin assignments in the code.</li>
+                </ul>
+            </div>
+
+            <div class="fault-item">
+                <div class="fault-item-title">🔄 FAULT 7: Mode Switch Not Working (Online ↔ Offline)</div>
+                <ul class="fault-steps">
+                    <li><span class="fault-step-num">1</span>For Online → Offline: Ensure Firebase is connected (status dot must be green).</li>
+                    <li><span class="fault-step-num">2</span>For Offline → Online: Ensure you are connected to "GROUP 1 PROJECT" hotspot and dashboard is open.</li>
+                    <li><span class="fault-step-num">3</span>Wait 10-15 seconds after pressing switch button for ESP8266 to restart.</li>
+                    <li><span class="fault-step-num">4</span>If ESP8266 fails to connect to home WiFi, it will automatically fall back to Offline Mode.</li>
+                    <li><span class="fault-step-num">5</span>Verify home WiFi credentials (SSID and password) in the ESP8266 code are correct.</li>
+                    <li><span class="fault-step-num">6</span>Re-upload ESP8266 code if mode switching is repeatedly failing.</li>
+                </ul>
+            </div>
         </div>
     </div>
 
-    <!-- SETTINGS MODAL -->
+    <!-- ====== SETTINGS MODAL ====== -->
     <div id="settings-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('settings-modal')">&times;</span>
@@ -267,7 +516,7 @@
         </div>
     </div>
 
-    <!-- EMERGENCY MODAL -->
+    <!-- ====== EMERGENCY MODAL ====== -->
     <div id="emergency-alert-modal" class="modal emergency">
         <div class="modal-content">
             <div class="emergency-icon">&#128680;</div>
@@ -277,51 +526,98 @@
         </div>
     </div>
 
+</div> <!-- end main-dashboard -->
+
 <script>
-    // --- Firebase Config ---
-    const firebaseConfig = {
-        apiKey: "Coz3tXL5lfiaVYxXtmC0iXBs0VjbvJUoZ53pSbHr",
-        databaseURL: "https://esp8266-3ff91-default-rtdb.firebaseio.com"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+// ===================== LOGIN LOGIC =====================
+const USERS = {
+    "GROUP1":   "jit@2024",
+    "operator": "group1@jit",
+    "admin":    "admin@123"
+};
 
-    // --- State ---
-    let currentTempThreshold  = 50.0;
-    let currentSmokeThreshold = 700;
-    let lastLogTime = 0;
+function doLogin() {
+    const uid  = document.getElementById('login-userid').value.trim();
+    const pass = document.getElementById('login-password').value;
+    const err  = document.getElementById('login-error');
 
-    // --- Chart Init ---
-    const ctx = document.getElementById('sensorChart').getContext('2d');
-    const sensorChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [
-                { label: 'Temp (°C)',    data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)',  tension: 0.4, yAxisID: 'y'  },
-                { label: 'Humidity (%)', data: [], borderColor: '#00a8ff', backgroundColor: 'rgba(0,168,255,0.2)', tension: 0.4, yAxisID: 'y1' }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 0 },
-            scales: {
-                x:  { type: 'time', time: { unit: 'second' }, ticks: { color: '#a0a0a0' }, grid: { color: '#343a46' } },
-                y:  { position: 'left',  ticks: { color: '#e74c3c' }, grid: { color: '#343a46' } },
-                y1: { position: 'right', ticks: { color: '#00a8ff' }, grid: { drawOnChartArea: false } }
+    if (USERS[uid] && USERS[uid] === pass) {
+        document.getElementById('login-page').style.display      = 'none';
+        document.getElementById('main-dashboard').style.display  = 'block';
+        sessionStorage.setItem('loggedIn', 'true');
+        sessionStorage.setItem('username', uid);
+        err.style.display = 'none';
+        initDashboard();
+    } else {
+        err.style.display = 'block';
+        document.getElementById('login-password').value = '';
+    }
+}
+
+function doLogout() {
+    closeNav();
+    if (confirm("Logout karna chahte hain?")) {
+        sessionStorage.removeItem('loggedIn');
+        sessionStorage.removeItem('username');
+        document.getElementById('main-dashboard').style.display = 'none';
+        document.getElementById('login-page').style.display     = 'flex';
+        document.getElementById('login-userid').value   = '';
+        document.getElementById('login-password').value = '';
+    }
+}
+
+// Auto-login if session exists
+window.addEventListener('load', () => {
+    if (sessionStorage.getItem('loggedIn') === 'true') {
+        document.getElementById('login-page').style.display     = 'none';
+        document.getElementById('main-dashboard').style.display = 'block';
+        initDashboard();
+    }
+});
+
+// ===================== DASHBOARD LOGIC =====================
+let sensorChart;
+let currentTempThreshold  = 50.0;
+let currentSmokeThreshold = 700;
+let lastLogTime = 0;
+let db;
+
+function initDashboard() {
+    // Firebase init (only once)
+    if (!db) {
+        const firebaseConfig = {
+            apiKey: "Coz3tXL5lfiaVYxXtmC0iXBs0VjbvJUoZ53pSbHr",
+            databaseURL: "https://esp8266-3ff91-default-rtdb.firebaseio.com"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+    }
+
+    // Chart init
+    if (!sensorChart) {
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Temp (°C)',    data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)',  tension: 0.4, yAxisID: 'y'  },
+                    { label: 'Humidity (%)', data: [], borderColor: '#00a8ff', backgroundColor: 'rgba(0,168,255,0.2)', tension: 0.4, yAxisID: 'y1' }
+                ]
             },
-            plugins: { legend: { labels: { color: '#e6e6e6' } } }
-        }
-    });
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+                scales: {
+                    x:  { type: 'time', time: { unit: 'second' }, ticks: { color: '#a0a0a0' }, grid: { color: '#343a46' } },
+                    y:  { position: 'left',  ticks: { color: '#e74c3c' }, grid: { color: '#343a46' } },
+                    y1: { position: 'right', ticks: { color: '#00a8ff' }, grid: { drawOnChartArea: false } }
+                },
+                plugins: { legend: { labels: { color: '#e6e6e6' } } }
+            }
+        });
+    }
 
-    // --- Sidebar ---
-    function openNav()  { document.getElementById("mySidebar").style.width = "var(--sidebar-width)"; }
-    function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
-    function openSidebarModal(id) { closeNav(); document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    // --- Settings Button ---
+    // Settings button
     document.getElementById('settings-btn').onclick = () => {
         document.getElementById('new-temp-threshold').value  = currentTempThreshold;
         document.getElementById('new-smoke-threshold').value = currentSmokeThreshold;
@@ -335,85 +631,7 @@
         });
     };
 
-    function saveThresholds() {
-        const nt = parseFloat(document.getElementById('new-temp-threshold').value);
-        const ns = parseInt(document.getElementById('new-smoke-threshold').value);
-        if (!isNaN(nt) && !isNaN(ns)) {
-            currentTempThreshold  = nt;
-            currentSmokeThreshold = ns;
-            document.getElementById('current-temp-threshold').textContent  = nt.toFixed(1);
-            document.getElementById('current-smoke-threshold').textContent = ns;
-            db.ref("settings").set({ tempThreshold: nt, smokeThreshold: ns });
-            closeModal('settings-modal');
-        }
-    }
-
-    // --- History Table ---
-    function logDataToTable(data) {
-        const tb = document.getElementById('history-table-body');
-        const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const row = tb.insertRow(0);
-        const motorState = document.getElementById('motor-toggle').checked;
-        const load1State = document.getElementById('load1-toggle').checked;
-        const load2State = document.getElementById('load2-toggle').checked;
-        const load3State = document.getElementById('load3-toggle').checked;
-        [
-            ts,
-            (data.temperature || 0).toFixed(1),
-            (data.humidity    || 0).toFixed(1),
-            data.smoke || 0,
-            data.fire   ? 'DETECTED' : 'CLEAR',
-            data.pir    ? 'MOTION'   : 'CLEAR',
-            motorState  ? 'ON' : 'OFF',
-            load1State  ? 'ON' : 'OFF',
-            load2State  ? 'ON' : 'OFF',
-            load3State  ? 'ON' : 'OFF'
-        ].forEach(t => { row.insertCell().textContent = t; });
-        if (tb.rows.length > 60) tb.deleteRow(60);
-    }
-
-    // --- Emergency Alert ---
-    function checkAlerts(data) {
-        const modal      = document.getElementById('emergency-alert-modal');
-        const titleEl    = document.getElementById('emergency-title');
-        const fireAlert  = data.fire === true;
-        const tempAlert  = (data.temperature || 0) > currentTempThreshold;
-        const smokeAlert = (data.smoke || 0) > currentSmokeThreshold;
-
-        if (fireAlert) {
-            titleEl.innerText   = "🚨 FIRE ALERT 🚨";
-            modal.style.display = 'flex';
-        } else if (tempAlert) {
-            titleEl.innerText   = "🌡️ OVERTEMPERATURE ALERT 🌡️";
-            modal.style.display = 'flex';
-        } else if (smokeAlert) {
-            titleEl.innerText   = "💨 HIGH SMOKE ALERT 💨";
-            modal.style.display = 'flex';
-        } else {
-            modal.style.display = 'none';
-        }
-
-        // Safety / Fire lock
-        const lock = data.safety || fireAlert;
-        document.querySelectorAll('input[type="checkbox"]').forEach(t => t.disabled = lock);
-    }
-
-    // --- Stop Buzzer ---
-    function stopBuzzer() {
-        db.ref("control/buzzer").set(0);
-        document.getElementById('emergency-alert-modal').style.display = 'none';
-    }
-
-    // --- Switch to Offline ---
-    function switchToOffline() {
-        closeNav();
-        if (confirm("Offline Mode me switch karein?\nESP8266 restart hoga aur 'GROUP 1 PROJECT' WiFi hotspot banana shuru karega.")) {
-            db.ref("control/mode").set("offline");
-            alert("Command bhej diya!\n'GROUP 1 PROJECT' WiFi se connect karo aur 192.168.4.1 kholo.");
-        }
-    }
-
-    // --- Firebase Sensor Listener ---
+    // Firebase listeners
     db.ref("sensor").on("value", (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
@@ -434,7 +652,7 @@
         safetyEl.textContent = data.safety ? 'ACTIVE' : 'INACTIVE';
         data.safety ? safetyEl.classList.remove('alert') : safetyEl.classList.add('alert');
 
-        // Chart update — fixed max 20 points
+        // Chart
         const now = new Date();
         sensorChart.data.labels.push(now);
         sensorChart.data.datasets[0].data.push(data.temperature);
@@ -445,14 +663,11 @@
         }
         sensorChart.update('none');
 
-        // Status dot
         document.getElementById('status-dot').classList.add('connected');
         document.getElementById('status-text').textContent = 'Connected (Firebase)';
 
-        // Alerts
         checkAlerts(data);
 
-        // History table — har 1 minute
         const now2 = Date.now();
         if (now2 - lastLogTime >= 60000) {
             logDataToTable(data);
@@ -460,7 +675,6 @@
         }
     });
 
-    // --- Firebase Control Sync ---
     db.ref("control").on("value", (snapshot) => {
         const ctrl = snapshot.val();
         if (!ctrl) return;
@@ -469,11 +683,217 @@
         if (ctrl.load2 !== undefined) document.getElementById('load2-toggle').checked = ctrl.load2 === 1;
         if (ctrl.load3 !== undefined) document.getElementById('load3-toggle').checked = ctrl.load3 === 1;
     });
+}
 
-    // --- Send Command to Firebase ---
-    function sendCmd(device, state) {
-        db.ref("control/" + device).set(state ? 1 : 0);
+// --- Sidebar ---
+function openNav()  { document.getElementById("mySidebar").style.width = "var(--sidebar-width)"; }
+function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
+function openSidebarModal(id) { closeNav(); document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// --- History Table ---
+function logDataToTable(data) {
+    const tb  = document.getElementById('history-table-body');
+    const ts  = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const row = tb.insertRow(0);
+    [
+        ts,
+        (data.temperature || 0).toFixed(1),
+        (data.humidity    || 0).toFixed(1),
+        data.smoke || 0,
+        data.fire   ? 'DETECTED' : 'CLEAR',
+        data.pir    ? 'MOTION'   : 'CLEAR',
+        document.getElementById('motor-toggle').checked  ? 'ON' : 'OFF',
+        document.getElementById('load1-toggle').checked  ? 'ON' : 'OFF',
+        document.getElementById('load2-toggle').checked  ? 'ON' : 'OFF',
+        document.getElementById('load3-toggle').checked  ? 'ON' : 'OFF'
+    ].forEach(t => { row.insertCell().textContent = t; });
+    if (tb.rows.length > 60) tb.deleteRow(60);
+}
+
+// --- Alerts ---
+function checkAlerts(data) {
+    const modal      = document.getElementById('emergency-alert-modal');
+    const titleEl    = document.getElementById('emergency-title');
+    const fireAlert  = data.fire === true;
+    const tempAlert  = (data.temperature || 0) > currentTempThreshold;
+    const smokeAlert = (data.smoke || 0)  > currentSmokeThreshold;
+    if (fireAlert)       { titleEl.innerText = "🚨 FIRE ALERT 🚨";            modal.style.display = 'flex'; }
+    else if (tempAlert)  { titleEl.innerText = "🌡️ OVERTEMPERATURE ALERT 🌡️"; modal.style.display = 'flex'; }
+    else if (smokeAlert) { titleEl.innerText = "💨 HIGH SMOKE ALERT 💨";       modal.style.display = 'flex'; }
+    else                 { modal.style.display = 'none'; }
+    const lock = data.safety || fireAlert;
+    document.querySelectorAll('input[type="checkbox"]').forEach(t => t.disabled = lock);
+}
+
+function stopBuzzer() {
+    db.ref("control/buzzer").set(0);
+    document.getElementById('emergency-alert-modal').style.display = 'none';
+}
+
+// --- Settings ---
+function saveThresholds() {
+    const nt = parseFloat(document.getElementById('new-temp-threshold').value);
+    const ns = parseInt(document.getElementById('new-smoke-threshold').value);
+    if (!isNaN(nt) && !isNaN(ns)) {
+        currentTempThreshold  = nt;
+        currentSmokeThreshold = ns;
+        document.getElementById('current-temp-threshold').textContent  = nt.toFixed(1);
+        document.getElementById('current-smoke-threshold').textContent = ns;
+        db.ref("settings").set({ tempThreshold: nt, smokeThreshold: ns });
+        closeModal('settings-modal');
     }
+}
+
+// --- Switch to Offline ---
+function switchToOffline() {
+    closeNav();
+    if (confirm("Offline Mode me switch karein?\nESP8266 restart hoga aur 'GROUP 1 PROJECT' WiFi hotspot banana shuru karega.")) {
+        db.ref("control/mode").set("offline");
+        alert("Command bhej diya!\n'GROUP 1 PROJECT' WiFi se connect karo aur 192.168.4.1 kholo.");
+    }
+}
+
+// --- Firebase Command ---
+function sendCmd(device, state) {
+    db.ref("control/" + device).set(state ? 1 : 0);
+}
+
+// ===================== PDF DOWNLOAD =====================
+function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    const now       = new Date();
+    const dateStr   = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const timeStr   = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const pageW     = doc.internal.pageSize.getWidth();
+
+    // --- Header Background ---
+    doc.setFillColor(28, 32, 42);
+    doc.rect(0, 0, pageW, 38, 'F');
+
+    // --- Title ---
+    doc.setTextColor(0, 168, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Reliable Real Time Wireless Monitoring, Automation & Fault Detection System', pageW / 2, 12, { align: 'center' });
+
+    doc.setTextColor(230, 230, 230);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Jhulelal Institute of Technology, Nagpur — Department of Electrical Engineering', pageW / 2, 20, { align: 'center' });
+    doc.text(`Report Generated: ${dateStr} at ${timeStr}   |   Operator: ${sessionStorage.getItem('username') || 'N/A'}`, pageW / 2, 27, { align: 'center' });
+
+    // --- Divider ---
+    doc.setDrawColor(0, 168, 255);
+    doc.setLineWidth(0.5);
+    doc.line(10, 33, pageW - 10, 33);
+
+    // --- Summary Stats ---
+    const tbody = document.getElementById('history-table-body');
+    const rows  = tbody.rows;
+    let totalRows = rows.length;
+    let fireCount = 0, motionCount = 0, tempValues = [], smokeValues = [];
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].cells;
+        if (cells[4] && cells[4].textContent === 'DETECTED') fireCount++;
+        if (cells[5] && cells[5].textContent === 'MOTION')   motionCount++;
+        if (cells[1]) tempValues.push(parseFloat(cells[1].textContent) || 0);
+        if (cells[3]) smokeValues.push(parseInt(cells[3].textContent)  || 0);
+    }
+    const avgTemp  = tempValues.length  ? (tempValues.reduce((a,b)=>a+b,0)  / tempValues.length).toFixed(1)  : '--';
+    const avgSmoke = smokeValues.length ? (smokeValues.reduce((a,b)=>a+b,0) / smokeValues.length).toFixed(0) : '--';
+    const maxTemp  = tempValues.length  ? Math.max(...tempValues).toFixed(1)  : '--';
+    const maxSmoke = smokeValues.length ? Math.max(...smokeValues)             : '--';
+
+    // Summary boxes
+    const summaryData = [
+        { label: 'Total Logs',    value: totalRows },
+        { label: 'Avg Temp',      value: avgTemp + ' °C' },
+        { label: 'Max Temp',      value: maxTemp + ' °C' },
+        { label: 'Avg Smoke',     value: avgSmoke + ' ppm' },
+        { label: 'Max Smoke',     value: maxSmoke + ' ppm' },
+        { label: 'Fire Events',   value: fireCount },
+        { label: 'Motion Events', value: motionCount },
+    ];
+    const boxW = (pageW - 20) / summaryData.length;
+    summaryData.forEach((item, i) => {
+        const x = 10 + i * boxW;
+        doc.setFillColor(44, 51, 64);
+        doc.roundedRect(x + 1, 36, boxW - 2, 16, 2, 2, 'F');
+        doc.setTextColor(0, 168, 255);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.text(item.label, x + boxW / 2, 41, { align: 'center' });
+        doc.setTextColor(230, 230, 230);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(item.value), x + boxW / 2, 48, { align: 'center' });
+    });
+
+    // --- Section Title ---
+    doc.setTextColor(230, 230, 230);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Sensor & Load Data Log', 10, 60);
+
+    // --- Table ---
+    if (rows.length === 0) {
+        doc.setFontSize(10);
+        doc.setTextColor(160, 160, 160);
+        doc.setFont('helvetica', 'italic');
+        doc.text('No data available. Logs are recorded every 1 minute.', pageW / 2, 75, { align: 'center' });
+    } else {
+        const tableData = [];
+        for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].cells;
+            tableData.push([
+                cells[0]?.textContent || '',
+                cells[1]?.textContent || '',
+                cells[2]?.textContent || '',
+                cells[3]?.textContent || '',
+                cells[4]?.textContent || '',
+                cells[5]?.textContent || '',
+                cells[6]?.textContent || '',
+                cells[7]?.textContent || '',
+                cells[8]?.textContent || '',
+                cells[9]?.textContent || '',
+            ]);
+        }
+        doc.autoTable({
+            head: [['Time', 'Temp (°C)', 'Humidity (%)', 'Smoke (ppm)', 'Fire', 'PIR Motion', 'Motor', 'Load 1', 'Load 2', 'Load 3']],
+            body: tableData,
+            startY: 63,
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2.5, textColor: [220, 220, 220], fillColor: [28, 32, 42] },
+            headStyles: { fillColor: [0, 168, 255], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+            alternateRowStyles: { fillColor: [35, 40, 52] },
+            didParseCell: (data) => {
+                if (data.section === 'body') {
+                    if (data.column.index === 4 && data.cell.raw === 'DETECTED') data.cell.styles.textColor = [231, 76, 60];
+                    if (data.column.index === 5 && data.cell.raw === 'MOTION')   data.cell.styles.textColor = [231, 76, 60];
+                    if (data.column.index === 6 && data.cell.raw === 'ON')       data.cell.styles.textColor = [46, 204, 113];
+                    if ([7,8,9].includes(data.column.index) && data.cell.raw === 'ON') data.cell.styles.textColor = [46, 204, 113];
+                }
+            },
+            margin: { left: 10, right: 10 }
+        });
+    }
+
+    // --- Footer ---
+    const finalY = doc.internal.pageSize.getHeight() - 8;
+    doc.setFillColor(28, 32, 42);
+    doc.rect(0, finalY - 4, pageW, 12, 'F');
+    doc.setTextColor(100, 110, 130);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('GROUP 1 — Reliable Real Time Wireless Monitoring & Automation System | Jhulelal Institute of Technology, Nagpur', pageW / 2, finalY + 2, { align: 'center' });
+
+    // Save
+    const filename = `Sensor_Report_${now.toLocaleDateString('en-IN').replace(/\//g, '-')}_${now.getHours()}h${now.getMinutes()}m.pdf`;
+    doc.save(filename);
+}
 </script>
 </body>
 </html>
