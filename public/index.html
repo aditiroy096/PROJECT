@@ -34,8 +34,9 @@
         .sidebar .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; cursor: pointer; border-bottom: none !important; }
         .sidebar-title { padding: 0 25px 20px 25px; color: var(--accent-blue); font-weight: 700; font-size: 22px; border-bottom: 1px solid var(--border-color); }
         .sidebar-switch-btn {
-            margin: auto 20px 30px 20px; padding: 14px 20px; background-color: rgba(0, 168, 255, 0.15);
-            color: var(--accent-blue); border: 1px solid var(--accent-blue); border-radius: 12px;
+            margin: auto 20px 30px 20px; padding: 14px 20px;
+            background-color: rgba(0,168,255,0.15); color: var(--accent-blue);
+            border: 1px solid var(--accent-blue); border-radius: 12px;
             font-size: 16px; font-weight: 600; cursor: pointer; text-align: center;
             transition: 0.3s; text-decoration: none; display: block;
         }
@@ -52,7 +53,7 @@
         .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--accent-red); animation: pulse 2s infinite; }
         .status-dot.connected { background-color: var(--accent-green); animation: none; box-shadow: 0 0 10px var(--accent-green); }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); } 70% { box-shadow: 0 0 0 10px rgba(231,76,60,0); } 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); } }
+        @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(231,76,60,0.4);}70%{box-shadow:0 0 0 10px rgba(231,76,60,0);}100%{box-shadow:0 0 0 0 rgba(231,76,60,0);} }
 
         .widget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
         .card { background-color: var(--bg-dark-secondary); border-radius: 16px; padding: 24px; border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
@@ -83,7 +84,7 @@
         /* --- MODALS --- */
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background-color: var(--bg-dark-secondary); padding: 24px; border: 1px solid var(--border-color); border-radius: 16px; width: 90%; max-width: 700px; position: relative; animation: fadeIn 0.3s; text-align: center; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);} }
         .close-btn { color: var(--text-secondary); position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
         .modal-content h2 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
         .modal-content h3 { color: var(--accent-blue); }
@@ -108,7 +109,20 @@
         .input-group { text-align: left; padding: 10px; }
         .current-threshold { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
 
-        /* History Table */
+        /* --- GRAPH CARD --- */
+        .graph-card {
+            height: 320px;
+            overflow: hidden;
+        }
+        .graph-card .card-header {
+            margin-bottom: 10px;
+        }
+        .graph-wrapper {
+            position: relative;
+            height: calc(100% - 50px);
+        }
+
+        /* --- HISTORY TABLE --- */
         .history-table-container { overflow: auto; max-height: 400px; margin-top: 10px; }
         .history-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
         .history-table th, .history-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; white-space: nowrap; }
@@ -143,6 +157,7 @@
             </div>
         </header>
 
+        <!-- SENSOR CARDS -->
         <div class="widget-grid">
             <div class="card"><div class="card-header"><span class="card-title">Temperature</span></div><div class="sensor-value"><span id="temp-value">--</span><span class="unit">°C</span></div></div>
             <div class="card"><div class="card-header"><span class="card-title">Humidity</span></div><div class="sensor-value"><span id="humidity-value">--</span><span class="unit">%</span></div></div>
@@ -167,19 +182,29 @@
             </div>
         </div>
 
-        <!-- GRAPH CARD -->
-        <div class="card" style="min-height:320px;">
-            <div class="card-header"><span class="card-title">Sensor History (Graph)</span></div>
-            <canvas id="sensorChart"></canvas>
+        <!-- GRAPH CARD — Fixed Height -->
+        <div class="card graph-card">
+            <div class="card-header">
+                <span class="card-title">Sensor History (Graph)</span>
+            </div>
+            <div class="graph-wrapper">
+                <canvas id="sensorChart"></canvas>
+            </div>
         </div>
 
-        <!-- HISTORY TABLE CARD -->
-        <div class="card" style="min-height:200px;">
-            <div class="card-header"><span class="card-title">Sensor &amp; Control History (Logs every 1 minute)</span></div>
+        <!-- HISTORY TABLE CARD — Same Width, Graph ke Neeche -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Sensor &amp; Control History (Logs every 1 minute)</span>
+            </div>
             <div class="history-table-container">
                 <table class="history-table">
                     <thead>
-                        <tr><th>Time</th><th>Temp (°C)</th><th>Humidity (%)</th><th>Smoke (ppm)</th><th>Fire</th><th>PIR</th><th>Motor</th><th>Load 1</th><th>Load 2</th><th>Load 3</th></tr>
+                        <tr>
+                            <th>Time</th><th>Temp (°C)</th><th>Humidity (%)</th>
+                            <th>Smoke (ppm)</th><th>Fire</th><th>PIR</th>
+                            <th>Motor</th><th>Load 1</th><th>Load 2</th><th>Load 3</th>
+                        </tr>
                     </thead>
                     <tbody id="history-table-body"></tbody>
                 </table>
@@ -192,16 +217,9 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('details-modal')">&times;</span>
             <h2>Project Details</h2>
-            <div class="details-section">
-                <h3>Summary</h3>
-                <p>This project is a comprehensive IoT-based monitoring and control system. The ESP8266 acts as a web server and communication bridge connected to Firebase Cloud.</p>
-            </div>
-            <div class="details-section">
-                <h3>Guide</h3>
-                <p class="guide-name">PROF. S.A. KALE</p>
-            </div>
-            <div class="details-section">
-                <h3>Group Members</h3>
+            <div class="details-section"><h3>Summary</h3><p>This project is a comprehensive IoT-based monitoring and control system. The ESP8266 acts as a web server and communication bridge connected to Firebase Cloud.</p></div>
+            <div class="details-section"><h3>Guide</h3><p class="guide-name">PROF. S.A. KALE</p></div>
+            <div class="details-section"><h3>Group Members</h3>
                 <ul class="group-members-list">
                     <li>TARUN ZALIYA</li><li>ANIKET JADHAV</li><li>SAMIKSHA DHAMDAR</li>
                     <li>PRATYAKSH GANVIR</li><li>DIPAK KHANORKAR</li>
@@ -254,7 +272,7 @@
         <div class="modal-content">
             <div class="emergency-icon">&#128680;</div>
             <h2 id="emergency-title">ALERT</h2>
-            <p id="emergency-message">An emergency condition has been detected.</p>
+            <p>An emergency condition has been detected.</p>
             <button class="emergency-button" onclick="stopBuzzer()">STOP BUZZER</button>
         </div>
     </div>
@@ -272,7 +290,6 @@
     let currentTempThreshold  = 50.0;
     let currentSmokeThreshold = 700;
     let lastLogTime = 0;
-    let latestData  = {};
 
     // --- Chart Init ---
     const ctx = document.getElementById('sensorChart').getContext('2d');
@@ -286,7 +303,9 @@
             ]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
             scales: {
                 x:  { type: 'time', time: { unit: 'second' }, ticks: { color: '#a0a0a0' }, grid: { color: '#343a46' } },
                 y:  { position: 'left',  ticks: { color: '#e74c3c' }, grid: { color: '#343a46' } },
@@ -296,15 +315,11 @@
         }
     });
 
-    // --- Sidebar Functions ---
+    // --- Sidebar ---
     function openNav()  { document.getElementById("mySidebar").style.width = "var(--sidebar-width)"; }
     function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
-
-    function openSidebarModal(modalId) {
-        closeNav();
-        document.getElementById(modalId).style.display = 'flex';
-    }
-    function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+    function openSidebarModal(id) { closeNav(); document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     // --- Settings Button ---
     document.getElementById('settings-btn').onclick = () => {
@@ -312,6 +327,7 @@
         document.getElementById('new-smoke-threshold').value = currentSmokeThreshold;
         document.getElementById('settings-modal').style.display = 'flex';
     };
+
     window.onclick = (e) => {
         ['settings-modal','details-modal','research-modal','fault-modal','emergency-alert-modal'].forEach(id => {
             const m = document.getElementById(id);
@@ -327,23 +343,22 @@
             currentSmokeThreshold = ns;
             document.getElementById('current-temp-threshold').textContent  = nt.toFixed(1);
             document.getElementById('current-smoke-threshold').textContent = ns;
-            // Firebase pe save karo taaki ESP8266 bhi read kar sake
             db.ref("settings").set({ tempThreshold: nt, smokeThreshold: ns });
             closeModal('settings-modal');
         }
     }
 
-    // --- History Table Log ---
+    // --- History Table ---
     function logDataToTable(data) {
-        const tableBody = document.getElementById('history-table-body');
-        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const newRow = tableBody.insertRow(0);
+        const tb = document.getElementById('history-table-body');
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const row = tb.insertRow(0);
         const motorState = document.getElementById('motor-toggle').checked;
         const load1State = document.getElementById('load1-toggle').checked;
         const load2State = document.getElementById('load2-toggle').checked;
         const load3State = document.getElementById('load3-toggle').checked;
-        const cellData   = [
-            timestamp,
+        [
+            ts,
             (data.temperature || 0).toFixed(1),
             (data.humidity    || 0).toFixed(1),
             data.smoke || 0,
@@ -353,33 +368,32 @@
             load1State  ? 'ON' : 'OFF',
             load2State  ? 'ON' : 'OFF',
             load3State  ? 'ON' : 'OFF'
-        ];
-        cellData.forEach(text => { const cell = newRow.insertCell(); cell.textContent = text; });
-        if (tableBody.rows.length > 60) tableBody.deleteRow(60);
+        ].forEach(t => { row.insertCell().textContent = t; });
+        if (tb.rows.length > 60) tb.deleteRow(60);
     }
 
-    // --- Emergency Alert Check ---
+    // --- Emergency Alert ---
     function checkAlerts(data) {
-        const modal       = document.getElementById('emergency-alert-modal');
-        const titleEl     = document.getElementById('emergency-title');
-        const fireAlert   = data.fire === true;
-        const tempAlert   = (data.temperature || 0) > currentTempThreshold;
-        const smokeAlert  = (data.smoke || 0) > currentSmokeThreshold;
+        const modal      = document.getElementById('emergency-alert-modal');
+        const titleEl    = document.getElementById('emergency-title');
+        const fireAlert  = data.fire === true;
+        const tempAlert  = (data.temperature || 0) > currentTempThreshold;
+        const smokeAlert = (data.smoke || 0) > currentSmokeThreshold;
 
         if (fireAlert) {
-            titleEl.innerText    = "🚨 FIRE ALERT 🚨";
-            modal.style.display  = 'flex';
+            titleEl.innerText   = "🚨 FIRE ALERT 🚨";
+            modal.style.display = 'flex';
         } else if (tempAlert) {
-            titleEl.innerText    = "🌡️ OVERTEMPERATURE ALERT 🌡️";
-            modal.style.display  = 'flex';
+            titleEl.innerText   = "🌡️ OVERTEMPERATURE ALERT 🌡️";
+            modal.style.display = 'flex';
         } else if (smokeAlert) {
-            titleEl.innerText    = "💨 HIGH SMOKE ALERT 💨";
-            modal.style.display  = 'flex';
+            titleEl.innerText   = "💨 HIGH SMOKE ALERT 💨";
+            modal.style.display = 'flex';
         } else {
-            modal.style.display  = 'none';
+            modal.style.display = 'none';
         }
 
-        // Safety / Fire lock — sab toggles disable
+        // Safety / Fire lock
         const lock = data.safety || fireAlert;
         document.querySelectorAll('input[type="checkbox"]').forEach(t => t.disabled = lock);
     }
@@ -395,34 +409,32 @@
         closeNav();
         if (confirm("Offline Mode me switch karein?\nESP8266 restart hoga aur 'GROUP 1 PROJECT' WiFi hotspot banana shuru karega.")) {
             db.ref("control/mode").set("offline");
-            alert("Command bhej diya! 'GROUP 1 PROJECT' WiFi se connect karo aur 192.168.4.1 kholo.");
+            alert("Command bhej diya!\n'GROUP 1 PROJECT' WiFi se connect karo aur 192.168.4.1 kholo.");
         }
     }
 
-    // --- Firebase Listener ---
+    // --- Firebase Sensor Listener ---
     db.ref("sensor").on("value", (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
-        latestData = data;
 
-        // Sensor cards update
         document.getElementById('temp-value').textContent     = (data.temperature || 0).toFixed(1);
         document.getElementById('humidity-value').textContent = (data.humidity    || 0).toFixed(1);
         document.getElementById('smoke-value').textContent    = data.smoke || 0;
 
-        const fireEl   = document.getElementById('fire-status');
+        const fireEl = document.getElementById('fire-status');
         fireEl.textContent = data.fire ? 'Detected!' : 'Clear';
         data.fire ? fireEl.classList.add('alert') : fireEl.classList.remove('alert');
 
-        const pirEl    = document.getElementById('pir-status');
-        pirEl.textContent  = data.pir  ? 'Motion Detected!' : 'No Motion';
-        data.pir  ? pirEl.classList.add('alert')    : pirEl.classList.remove('alert');
+        const pirEl = document.getElementById('pir-status');
+        pirEl.textContent = data.pir ? 'Motion Detected!' : 'No Motion';
+        data.pir ? pirEl.classList.add('alert') : pirEl.classList.remove('alert');
 
         const safetyEl = document.getElementById('safety-status');
         safetyEl.textContent = data.safety ? 'ACTIVE' : 'INACTIVE';
         data.safety ? safetyEl.classList.remove('alert') : safetyEl.classList.add('alert');
 
-        // Chart update
+        // Chart update — fixed max 20 points
         const now = new Date();
         sensorChart.data.labels.push(now);
         sensorChart.data.datasets[0].data.push(data.temperature);
@@ -437,10 +449,10 @@
         document.getElementById('status-dot').classList.add('connected');
         document.getElementById('status-text').textContent = 'Connected (Firebase)';
 
-        // Emergency check
+        // Alerts
         checkAlerts(data);
 
-        // History table — har 1 minute me log
+        // History table — har 1 minute
         const now2 = Date.now();
         if (now2 - lastLogTime >= 60000) {
             logDataToTable(data);
@@ -448,7 +460,7 @@
         }
     });
 
-    // Control toggle Firebase sync
+    // --- Firebase Control Sync ---
     db.ref("control").on("value", (snapshot) => {
         const ctrl = snapshot.val();
         if (!ctrl) return;
@@ -458,7 +470,7 @@
         if (ctrl.load3 !== undefined) document.getElementById('load3-toggle').checked = ctrl.load3 === 1;
     });
 
-    // Send command to Firebase
+    // --- Send Command to Firebase ---
     function sendCmd(device, state) {
         db.ref("control/" + device).set(state ? 1 : 0);
     }
